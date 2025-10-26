@@ -1,0 +1,66 @@
+name: hasbni
+description: "A new Flutter project."
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.3 <4.0.0' # I've updated this to a more typical range
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: 1.0.2
+  flutter_bloc: 8.1.3
+  equatable: 2.0.5
+  google_fonts: 6.1.0
+  mobile_scanner: 4.0.1
+  supabase_flutter: ^2.9.1
+  just_audio: ^0.9.36
+  image_picker: ^1.1.2
+  audio_session: ^0.1.25
+  intl: ^0.20.2
+  printing: ^5.14.2
+  pdf: ^3.11.3
+  shared_preferences: ^2.5.3
+  flutter_staggered_animations: ^1.1.1
+  
+# It's better practice to move build tools to dev_dependencies
+# but leaving it here as it was in your original file.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1 # Best practice is to have it here
+
+# ===============================================================
+# START: NEW SECTION FOR LAUNCHER ICONS
+# ===============================================================
+flutter_launcher_icons:
+  # The path to your high-resolution source icon.
+  # Assuming your logo is in 'assets/images/'. Change this if it's different.
+  image_path: "assets/images/logo.png"
+
+  # Android specific settings
+  android: true
+  # For modern Android, you need an adaptive icon (foreground + background)
+  # The background is a solid color. Change this to your app's brand color.
+  adaptive_icon_background: "#1F1F1F" 
+  # The foreground is your logo with transparency around it.
+  adaptive_icon_foreground: "assets/images/logo.png"
+
+  # iOS specific settings
+  ios: true
+  # iOS icons do not support transparency, so this removes it automatically.
+  remove_alpha_ios: true
+# ===============================================================
+# END: NEW SECTION FOR LAUNCHER ICONS
+# ===============================================================
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/sounds/
+    - assets/images/

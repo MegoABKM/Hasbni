@@ -1,0 +1,418 @@
+// lib/presentation/screens/roles/role_selection_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:hasbni/data/models/employee_model.dart';
+import 'package:hasbni/data/repositories/auth_repository.dart';
+import 'package:hasbni/data/repositories/employee_repository.dart';
+import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
+import 'package:hasbni/presentation/cubits/session/session_cubit.dart';
+
+class RoleSelectionScreen extends StatelessWidget {
+  const RoleSelectionScreen({super.key});
+
+  // --- Helper methods for dialogs remain the same ---
+  void _showManagerPasswordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => BlocProvider.value(
+        value: context.read<SessionCubit>(),
+        child: const _ManagerPasswordDialog(),
+      ),
+    );
+  }
+
+  void _showEmployeeSelectionDialog(BuildContext context) {
+    final employeeRepo = EmployeeRepository();
+    final sessionCubit = context.read<SessionCubit>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return FutureBuilder<List<Employee>>(
+          future: employeeRepo.getEmployees(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const AlertDialog(
+                content: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return AlertDialog(
+                title: const Text('خطأ'),
+                content: const Text('فشل تحميل قائمة الموظفين.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('حسناً'),
+                  ),
+                ],
+              );
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return AlertDialog(
+                title: const Text('لا يوجد موظفين'),
+                content: const Text('لم يقم المدير بإضافة أي موظفين بعد.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('حسناً'),
+                  ),
+                ],
+              );
+            }
+
+            Employee? selectedEmployee;
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return AlertDialog(
+                  title: const Text('اختر اسمك'),
+                  content: DropdownButtonFormField<Employee>(
+                    hint: const Text('اختر الموظف'),
+                    value: selectedEmployee,
+                    isExpanded: true,
+                    items: snapshot.data!.map((employee) {
+                      return DropdownMenuItem<Employee>(
+                        value: employee,
+                        child: Text(employee.fullName),
+                      );
+                    }).toList(),
+                    onChanged: (value) =>
+                        setState(() => selectedEmployee = value),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: const Text('إلغاء'),
+                    ),
+                    ElevatedButton(
+                      onPressed: selectedEmployee == null
+                          ? null
+                          : () async {
+                              await sessionCubit.setEmployeeRole(
+                                selectedEmployee!,
+                              );
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
+                              }
+                            },
+                      child: const Text('دخول'),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // THE FIX: A simple Scaffold. It will automatically use the
+    // `scaffoldBackgroundColor` from your theme for the ENTIRE screen.
+    return Scaffold(
+      // The background color is now controlled by your AppTheme.
+      // All the complex Stack and Container widgets have been removed.
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Branding and Welcome
+                Icon(
+                  Icons.how_to_reg_outlined,
+                  size: 80,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'اختر طريقة الدخول',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'من فضلك حدد دورك للمتابعة',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.grey[400],
+                  ),
+                ),
+                const SizedBox(height: 48),
+
+                // Animated Role Selection Cards
+                AnimationLimiter(
+                  child: Column(
+                    children: AnimationConfiguration.toStaggeredList(
+                      duration: const Duration(milliseconds: 375),
+                      childAnimationBuilder: (widget) => SlideAnimation(
+                        verticalOffset: 50.0,
+                        child: FadeInAnimation(child: widget),
+                      ),
+                      children: [
+                        _RoleSelectionCard(
+                          icon: Icons.shield_outlined,
+                          title: 'أنا المدير',
+                          subtitle: 'الوصول الكامل للنظام',
+                          onTap: () => _showManagerPasswordDialog(context),
+                        ),
+                        const SizedBox(height: 24),
+                        _RoleSelectionCard(
+                          icon: Icons.person_outline,
+                          title: 'أنا موظف',
+                          subtitle: 'الدخول إلى نقطة البيع',
+                          onTap: () => _showEmployeeSelectionDialog(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+                TextButton.icon(
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: const Text('تسجيل الخروج'),
+                  onPressed: () => context.read<AuthCubit>().signOut(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Custom widget for role selection cards (No changes needed here)
+class _RoleSelectionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _RoleSelectionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surface.withOpacity(0.9),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.dividerColor, width: 0.5),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 40, color: theme.colorScheme.primary),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// The _ManagerPasswordDialog remains the same
+class _ManagerPasswordDialog extends StatefulWidget {
+  const _ManagerPasswordDialog();
+
+  @override
+  State<_ManagerPasswordDialog> createState() => _ManagerPasswordDialogState();
+}
+
+class _ManagerPasswordDialogState extends State<_ManagerPasswordDialog> {
+  final _authRepo = AuthRepository();
+  final _passwordController = TextEditingController();
+  bool _isLoading = true;
+  bool _isPasswordSet = false;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfPasswordIsSet();
+  }
+
+  Future<void> _checkIfPasswordIsSet() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final result = await _authRepo.isManagerPasswordSet();
+      if (mounted) setState(() => _isPasswordSet = result);
+    } catch (e) {
+      if (mounted) setState(() => _errorText = 'فشل الاتصال بالخادم.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleManagerLogin() async {
+    if (_isLoading) return;
+    final sessionCubit = context.read<SessionCubit>();
+
+    if (!_isPasswordSet) {
+      await sessionCubit.setManagerRole();
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+
+    if (_passwordController.text.isEmpty) {
+      setState(() => _errorText = "الرجاء إدخال كلمة المرور");
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+    try {
+      final isValid = await _authRepo.verifyManagerPassword(
+        _passwordController.text,
+      );
+      if (mounted) {
+        if (isValid) {
+          await sessionCubit.setManagerRole();
+          if (mounted) Navigator.of(context).pop();
+        } else {
+          setState(() => _errorText = 'كلمة المرور غير صحيحة');
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() => _errorText = 'حدث خطأ أثناء التحقق.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const AlertDialog(
+        content: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_errorText != null && !_isPasswordSet) {
+      return AlertDialog(
+        title: const Text("خطأ في الاتصال"),
+        content: Text(_errorText!),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("إغلاق"),
+          ),
+        ],
+      );
+    }
+    return _isPasswordSet
+        ? _buildPasswordEntryDialog()
+        : _buildFirstTimeInfoDialog();
+  }
+
+  Widget _buildFirstTimeInfoDialog() {
+    return AlertDialog(
+      title: const Text('مرحباً بك أيها المدير'),
+      content: const Text(
+        'لم تقم بتعيين كلمة مرور للمدير بعد. يمكنك الدخول مباشرة هذه المرة.\n\nنوصي بالذهاب إلى الإعدادات لتعيين كلمة مرور.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('إلغاء'),
+        ),
+        ElevatedButton(
+          onPressed: _handleManagerLogin,
+          child: const Text('متابعة'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordEntryDialog() {
+    return AlertDialog(
+      title: const Text('دخول المدير'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _passwordController,
+            obscureText: true,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'كلمة مرور المدير',
+              errorText: _errorText,
+            ),
+            onSubmitted: _isLoading ? null : (_) => _handleManagerLogin(),
+          ),
+          if (_isLoading) ...[
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          child: const Text('إلغاء'),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _handleManagerLogin,
+          child: const Text('دخول'),
+        ),
+      ],
+    );
+  }
+}
