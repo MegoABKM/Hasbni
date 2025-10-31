@@ -14,13 +14,13 @@ class ScaleConfig {
   final double devicePixelRatio;
   final double globalPixelTextAdjustment;
 
-  // You might want to adjust this for testing if fonts are becoming too small
+  
   static const double _minAbsFontSize = 6.0;
-  // To make it easier to see changes during testing, let's use a more aggressive default here.
-  // REMEMBER TO CHANGE THIS IN YOUR ACTUAL ScaleConfig() call below for permanent effect.
-  // ignore: unused_field
+  
+  
+  
   static const double _defaultTestAdjustment =
-      0.0; // Set to -5.0 for aggressive testing if needed IN THE FACTORY
+      0.0; 
 
   ScaleConfig._({
     required this.referenceWidth,
@@ -41,9 +41,9 @@ class ScaleConfig {
     double refWidth = 375,
     double refHeight = 812,
     double refDPI = 326,
-    // ***** THIS IS THE IMPORTANT PART FOR YOUR GOAL *****
-    // ***** SET THIS TO -2.0 (or -5.0 for more noticeable testing) *****
-    double globalPixelTextAdjustment = -2.0, // Example: -2.0 or -5.0
+    
+    
+    double globalPixelTextAdjustment = -2.0, 
   }) {
     final mediaQuery = MediaQuery.of(context);
     final width = mediaQuery.size.width;
@@ -52,7 +52,7 @@ class ScaleConfig {
     final textScale = mediaQuery.textScaleFactor;
     final devicePixelRatio = mediaQuery.devicePixelRatio;
 
-    // Log when ScaleConfig is created and with what adjustment
+    
     print(
       "ScaleConfig created with globalPixelTextAdjustment: $globalPixelTextAdjustment",
     );
@@ -141,10 +141,10 @@ class ScaleConfig {
         "Final result (clamped between $_minAbsFontSize and $clampedCalculatedSize because adjustment is negative): $finalResult",
       );
     } else if (pixelAdjustment > 0) {
-      // If increasing, ensure it respects min font size and some reasonable upper bound.
-      // The upper bound from original clamp + adjustment might be too large,
-      // let's use clampedCalculatedSize + adjustment, but still clamped by a factor of original font size.
-      // For simplicity, let's use a slightly more generous upper proportional clamp if increasing.
+      
+      
+      
+      
       double increasedUpperClamp = (fontSize * 1.5) + pixelAdjustment.abs();
       finalResult = finalSizeAfterAdjustment.clamp(
         _minAbsFontSize,
@@ -154,7 +154,7 @@ class ScaleConfig {
         "Final result (clamped between $_minAbsFontSize and $increasedUpperClamp because adjustment is positive): $finalResult",
       );
     } else {
-      // No adjustment
+      
       finalResult = max(clampedCalculatedSize, _minAbsFontSize);
       print(
         "Final result (no adjustment, max of $clampedCalculatedSize and $_minAbsFontSize): $finalResult",
@@ -181,7 +181,7 @@ class ScaleConfig {
   }
 
   double tabletScaleText(double fontSize, {double? overridePixelAdjustment}) {
-    // The globalPixelTextAdjustment (or override) will be applied by the scaleText call.
+    
     print(
       "tabletScaleText called for fontSize: $fontSize, overridePixelAdjustment: $overridePixelAdjustment",
     );

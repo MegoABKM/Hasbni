@@ -1,4 +1,4 @@
-// lib/presentation/screens/sales/sale_detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
@@ -20,7 +20,7 @@ class SaleDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scaleConfig = context.scaleConfig;
 
-    // Provide both cubits needed by this screen and for printing
+    
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -56,7 +56,7 @@ class SaleDetailScreen extends StatelessWidget {
               style: TextStyle(fontSize: scaleConfig.scaleText(20)),
             ),
             actions: [
-              // Use a BlocBuilder to get access to both states for the print button
+              
               BlocBuilder<ProfileCubit, ProfileState>(
                 builder: (context, profileState) {
                   return BlocBuilder<SaleDetailCubit, SaleDetailState>(
@@ -79,7 +79,7 @@ class SaleDetailScreen extends StatelessWidget {
                                   ),
                                 );
                               }
-                            : null, // Button is disabled if data is not ready
+                            : null, 
                       );
                     },
                   );

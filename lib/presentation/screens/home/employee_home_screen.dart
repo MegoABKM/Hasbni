@@ -1,4 +1,4 @@
-// lib/presentation/screens/home/employee_home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
@@ -30,7 +30,7 @@ class EmployeeHomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // This is the only option for the employee
+              
               Card(
                 child: InkWell(
                   onTap: () {

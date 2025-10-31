@@ -1,4 +1,4 @@
-// lib/presentation/widgets/home_list_item_widget.dart
+
 import 'package:flutter/material.dart';
 
 class HomeListItem extends StatelessWidget {
@@ -23,7 +23,7 @@ class HomeListItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Material(
-        color: theme.scaffoldBackgroundColor, // A slightly different dark shade
+        color: theme.scaffoldBackgroundColor, 
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,

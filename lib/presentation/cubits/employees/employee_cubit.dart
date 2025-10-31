@@ -1,12 +1,12 @@
-// lib/presentation/cubits/employees/employees_cubit.dart
+
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/employee_model.dart';
 import 'package:hasbni/data/repositories/employee_repository.dart';
 import 'package:hasbni/presentation/cubits/employees/employees_state.dart';
 
-// تم حذف سطر "part"
-// أضف هذا الاستيراد بدلاً منه
+
+
 
 class EmployeesCubit extends Cubit<EmployeesState> {
   final EmployeeRepository _repository;
@@ -64,7 +64,7 @@ class EmployeesCubit extends Cubit<EmployeesState> {
     try {
       final updatedList = List<Employee>.from(state.employees)
         ..removeWhere((emp) => emp.id == id);
-      emit(state.copyWith(employees: updatedList)); // Optimistic update
+      emit(state.copyWith(employees: updatedList)); 
       await _repository.deleteEmployee(id);
     } catch (e) {
       emit(
@@ -73,7 +73,7 @@ class EmployeesCubit extends Cubit<EmployeesState> {
           errorMessage: "Failed to delete employee: $e",
         ),
       );
-      await loadEmployees(); // Revert on failure
+      await loadEmployees(); 
     }
   }
 }

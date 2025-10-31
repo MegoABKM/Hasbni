@@ -1,26 +1,26 @@
-// lib/core/services/sound_service.dart
+
 
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 
 class SoundService {
-  // --- Singleton Pattern ---
-  // 1. إنشاء نسخة خاصة ووحيدة
+  
+  
   static final SoundService _instance = SoundService._internal();
 
-  // 2. إنشاء Factory constructor لإعادة نفس النسخة دائماً
+  
   factory SoundService() {
     return _instance;
   }
 
-  // 3. إنشاء Constructor خاص لمنع الإنشاء من الخارج
+  
   SoundService._internal();
-  // --- End Singleton Pattern ---
+  
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isInitialized = false;
 
-  // الآن هذه دوال عادية ( وليست static )
+  
   Future<bool> initialize() async {
     if (_isInitialized) return true;
 

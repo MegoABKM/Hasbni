@@ -1,4 +1,4 @@
-// lib/presentation/cubits/expenses/expenses_state.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/expense_model.dart';
 

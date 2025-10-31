@@ -1,4 +1,4 @@
-// lib/data/models/sale_detail_model.dart
+
 import 'package:equatable/equatable.dart';
 
 class SaleDetailItem extends Equatable {
@@ -37,14 +37,14 @@ class SaleDetailItem extends Equatable {
 class SaleDetail extends Equatable {
   final int id;
   final double totalPrice;
-  final String currencyCode; // <-- NEW: The currency this sale was made in
+  final String currencyCode; 
   final DateTime createdAt;
   final List<SaleDetailItem> items;
 
   const SaleDetail({
     required this.id,
     required this.totalPrice,
-    required this.currencyCode, // <-- NEW
+    required this.currencyCode, 
     required this.createdAt,
     required this.items,
   });
@@ -59,7 +59,7 @@ class SaleDetail extends Equatable {
     return SaleDetail(
       id: json['id'],
       totalPrice: (json['total_price'] as num).toDouble(),
-      currencyCode: json['currency_code'] ?? 'USD', // <-- NEW, with a fallback
+      currencyCode: json['currency_code'] ?? 'USD', 
       createdAt: DateTime.parse(json['created_at']),
       items: itemsList,
     );

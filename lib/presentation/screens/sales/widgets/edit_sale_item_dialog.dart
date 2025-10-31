@@ -1,4 +1,4 @@
-// lib/presentation/screens/sales/widgets/edit_sale_item_dialog.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/sale_model.dart';
@@ -8,7 +8,7 @@ class EditSaleItemDialog extends StatefulWidget {
   final SaleItem item;
   final String currency;
 
-  // --- FIX: The 'cubit' parameter has been removed from the constructor ---
+  
   const EditSaleItemDialog({
     super.key,
     required this.item,
@@ -44,14 +44,14 @@ class _EditSaleItemDialogState extends State<EditSaleItemDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      // --- FIX: Read the cubit from the context inside the method ---
+      
       final salesCubit = context.read<SalesCubit>();
 
       final newQuantity = int.tryParse(_quantityController.text) ?? 0;
       final newPrice = double.tryParse(_priceController.text) ?? 0.0;
 
       salesCubit.updatePrice(widget.item.product, newPrice);
-      // Update quantity last, as it might remove the item if the quantity is 0
+      
       salesCubit.updateQuantity(widget.item.product, newQuantity);
 
       Navigator.of(context).pop();
@@ -60,7 +60,7 @@ class _EditSaleItemDialogState extends State<EditSaleItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Read the cubit here for the delete button
+    
     final salesCubit = context.read<SalesCubit>();
 
     return AlertDialog(

@@ -1,4 +1,4 @@
-// lib/data/models/exchange_rate_model.dart
+
 import 'package:equatable/equatable.dart';
 
 class ExchangeRate extends Equatable {
@@ -21,14 +21,14 @@ class ExchangeRate extends Equatable {
   }
 
   Map<String, dynamic> toJson() {
-    // --- START OF CORRECTION ---
-    // The 'id' is crucial for the upsert operation to know which row to update.
+    
+    
     return {
       if (id != null) 'id': id,
       'currency_code': currencyCode,
       'rate_to_usd': rateToUsd,
     };
-    // --- END OF CORRECTION ---
+    
   }
 
   @override

@@ -1,4 +1,4 @@
-// lib/presentation/cubits/expense_category/expense_category_state.dart
+
 part of 'expense_category_cubit.dart';
 
 enum CategoryStatus { initial, loading, success, failure }

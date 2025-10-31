@@ -1,4 +1,4 @@
-// lib/presentation/screens/auth/login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       body: Container(
-        // Add a gradient background
+        
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [theme.scaffoldBackgroundColor, theme.colorScheme.surface],
@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Container(
-                  // Wrap form in a styled card
+                  
                   padding: const EdgeInsets.all(24.0),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withOpacity(0.8),
@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Add an icon for branding
+                        
                         Icon(
                           Icons.storefront_outlined,
                           size: 80,

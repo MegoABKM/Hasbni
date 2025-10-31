@@ -1,4 +1,4 @@
-// lib/presentation/cubits/sales/sales_cubit.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
 import 'package:hasbni/data/models/product_model.dart';
@@ -45,7 +45,7 @@ class SalesCubit extends Cubit<SalesState> {
     _recalculateAndEmit(updatedCart);
   }
 
-  // --- NEW: دالة لتعديل السعر ---
+  
   void updatePrice(Product product, double newPrice) {
     final List<SaleItem> updatedCart = List.from(state.cart);
     final index = updatedCart.indexWhere(
@@ -114,14 +114,14 @@ class SalesCubit extends Cubit<SalesState> {
             .rateToUsd;
       }
 
-      // << THE CORE LOGIC CHANGE >>
+      
       final employeeId = sessionCubit.state.currentEmployee?.id;
 
       final saleId = await _salesRepository.createSale(
         items: state.cart,
         currencyCode: currencyCode,
         rateToUsdAtSale: rateToUsdAtSale,
-        employeeId: employeeId, // << Pass the employeeId
+        employeeId: employeeId, 
       );
       emit(
         state.copyWith(

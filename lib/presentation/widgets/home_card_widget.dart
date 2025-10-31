@@ -1,17 +1,17 @@
-// lib/presentation/widgets/home_card_widget.dart
+
 import 'package:flutter/material.dart';
 
 class HomeCard extends StatelessWidget {
   final String title;
   final IconData icon;
-  final List<Color> colors; // Changed from a single color to a list
+  final List<Color> colors; 
   final VoidCallback onTap;
 
   const HomeCard({
     super.key,
     required this.title,
     required this.icon,
-    required this.colors, // Updated parameter
+    required this.colors, 
     required this.onTap,
   });
 
@@ -19,7 +19,7 @@ class HomeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        // Create a gradient background for the card
+        
         gradient: LinearGradient(
           colors: colors,
           begin: Alignment.topLeft,

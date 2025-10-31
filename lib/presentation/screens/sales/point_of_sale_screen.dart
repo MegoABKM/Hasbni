@@ -1,7 +1,7 @@
-// lib/presentation/screens/sales/point_of_sale_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hasbni/core/services/currency_converter_service.dart'; // NEW IMPORT
+import 'package:hasbni/core/services/currency_converter_service.dart'; 
 import 'package:hasbni/core/services/search_service.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
 import 'package:hasbni/data/models/product_model.dart';
@@ -369,11 +369,11 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
 
   @override
   Widget build(BuildContext context) {
-    // === START OF CORRECTION ===
+    
     final salesState = widget.salesState;
     final profile = widget.profile;
 
-    // Instantiate the converter service to use for UI display.
+    
     final converter = CurrencyConverterService(profile);
 
     final List<ExchangeRate> availableRates = [
@@ -392,22 +392,22 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
     String title = 'الإجمالي';
     String buttonText = 'إتمام البيع';
 
-    // The total price in the sales state is always in the base currency (USD).
+    
     double basePriceUsd = salesState.totalPrice;
 
     if (widget.isExchangeMode && widget.itemToExchange != null) {
-      // For now, let's assume the exchange price difference is calculated on the backend.
-      // The UI will just show the new items' total. A more complex UI could show the difference.
+      
+      
       title = 'إجمالي السلة الجديدة';
       buttonText = 'إتمام الاستبدال';
     }
 
-    // CONVERT the base USD price to the currency selected in the dropdown for display.
+    
     final double displayPrice = converter.convert(
       basePriceUsd,
       _selectedPaymentCurrency,
     );
-    // === END OF CORRECTION ===
+    
 
     return Card(
       margin: EdgeInsets.zero,
@@ -428,7 +428,7 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
-                  // Rebuild the widget with the new currency, which will trigger the conversion.
+                  
                   setState(() => _selectedPaymentCurrency = value);
                 }
               },
@@ -438,7 +438,7 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(title, style: Theme.of(context).textTheme.titleLarge),
-                // Use the correctly converted displayPrice here.
+                
                 Text(
                   '${displayPrice.abs().toStringAsFixed(2)} $_selectedPaymentCurrency',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -464,8 +464,8 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
                     ? null
                     : () {
                         if (widget.isExchangeMode) {
-                          // Not fully implemented on the frontend side, but the backend is ready.
-                          // This would need to pass the selected currency info to the exchangeItems cubit method.
+                          
+                          
                         } else {
                           context.read<SalesCubit>().completeSale(
                             currencyCode: _selectedPaymentCurrency,

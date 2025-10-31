@@ -1,19 +1,19 @@
-// lib/presentation/cubits/inventory/inventory_state.dart
+
 
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/product_model.dart';
 
 enum InventoryStatus { initial, loading, success, failure, loadingMore }
 
-// Enum للتحكم في خيارات الفرز
+
 enum SortBy { name, quantity, sellingPrice, createdAt }
 
 class InventoryState extends Equatable {
   final InventoryStatus status;
-  final List<Product> products; // الآن لدينا قائمة واحدة فقط
+  final List<Product> products; 
   final String? errorMessage;
 
-  // متغيرات الحالة الجديدة للترقيم والفرز
+  
   final bool hasMore;
   final int page;
   final String? searchQuery;
@@ -27,7 +27,7 @@ class InventoryState extends Equatable {
     this.hasMore = true,
     this.page = 0,
     this.searchQuery,
-    this.sortBy = SortBy.name, // الفرز الافتراضي بالاسم
+    this.sortBy = SortBy.name, 
     this.ascending = true,
   });
 
@@ -37,7 +37,7 @@ class InventoryState extends Equatable {
     String? errorMessage,
     bool? hasMore,
     int? page,
-    // نسمح بإلغاء البحث عن طريق تمرير null
+    
     String? Function()? searchQuery,
     SortBy? sortBy,
     bool? ascending,

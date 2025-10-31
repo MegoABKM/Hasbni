@@ -1,5 +1,5 @@
-// lib/presentation/screens/sales/sales_screen.dart
-// ignore_for_file: unused_local_variable
+
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -178,13 +178,13 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildExchangeHeader(BuildContext context) {
-    // This now correctly displays the value of the returned item.
+    
     final profile = context.read<ProfileCubit>().state.profile;
     final converter = CurrencyConverterService(profile);
 
-    // Assuming itemToExchange.priceAtSale is in the original sale's currency.
-    // This is a simplification; a full solution would require the original rate.
-    // For now, we display it as is. The backend handles the true value.
+    
+    
+    
     final returnedValue = itemToExchange!.priceAtSale * returnQuantity!;
 
     return Container(
@@ -279,7 +279,7 @@ class SalesScreen extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              'السعر (USD)', // Clarify that this is the base price
+              'السعر (USD)', 
               textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
@@ -287,7 +287,7 @@ class SalesScreen extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              'الإجمالي (USD)', // Clarify that this is the base price
+              'الإجمالي (USD)', 
               textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
@@ -382,7 +382,7 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
   @override
   void initState() {
     super.initState();
-    // Default to the base currency
+    
     _selectedPaymentCurrency = 'USD';
   }
 
@@ -393,7 +393,7 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
     final converter = CurrencyConverterService(profile);
 
     final List<ExchangeRate> availableRates = [
-      // Use a dummy ID for the base USD rate
+      
       const ExchangeRate(id: -1, currencyCode: 'USD', rateToUsd: 1.0),
       ...profile.exchangeRates,
     ];
@@ -411,13 +411,13 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
     double basePriceUsd = salesState.totalPrice;
 
     if (widget.isExchangeMode) {
-      // In exchange mode, the title should reflect the new items being purchased.
-      // The final difference is calculated on the backend and shown in the success message.
+      
+      
       title = 'إجمالي السلة الجديدة';
       buttonText = 'إتمام الاستبدال';
     }
 
-    // Always convert the base USD price to the selected currency for display
+    
     final double displayPrice = converter.convert(
       basePriceUsd,
       _selectedPaymentCurrency,
@@ -475,17 +475,17 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
                         salesState.status == SalesStatus.loading
                     ? null
                     : () {
-                        // --- START OF CORRECTION ---
-                        // Find the full ExchangeRate object for the selected currency.
+                        
+                        
                         final selectedRateObject = availableRates.firstWhere(
                           (r) => r.currencyCode == _selectedPaymentCurrency,
                         );
 
                         if (widget.isExchangeMode) {
-                          // Assert that the cubit is not null in exchange mode
+                          
                           assert(widget.saleDetailCubit != null);
 
-                          // Call the cubit method with all required parameters
+                          
                           widget.saleDetailCubit!.exchangeItems(
                             saleItemIdToReturn:
                                 widget.itemToExchange!.saleItemId,
@@ -495,13 +495,13 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
                             rateToUsdAtSale: selectedRateObject.rateToUsd,
                           );
                         } else {
-                          // The sale logic is already correct
+                          
                           context.read<SalesCubit>().completeSale(
                             currencyCode: _selectedPaymentCurrency,
                             rates: availableRates,
                           );
                         }
-                        // --- END OF CORRECTION ---
+                        
                       },
                 child: salesState.status == SalesStatus.loading
                     ? const SizedBox(

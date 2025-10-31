@@ -1,4 +1,4 @@
-// lib/data/models/expense_model.dart
+
 import 'package:equatable/equatable.dart';
 
 class Expense extends Equatable {
@@ -9,9 +9,9 @@ class Expense extends Equatable {
   final String currencyCode;
   final double amountInCurrency;
 
-  // NEW FIELDS
+  
   final int? categoryId;
-  final String recurrence; // 'one_time', 'daily', 'monthly', 'yearly'
+  final String recurrence; 
 
   const Expense({
     this.id,

@@ -1,8 +1,8 @@
-// lib/data/models/sale_model.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/product_model.dart';
 
-// ignore: must_be_immutable
+
 class SaleItem extends Equatable {
   final Product product;
   int quantity;

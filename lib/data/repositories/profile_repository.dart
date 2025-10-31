@@ -1,4 +1,4 @@
-// lib/data/repositories/profile_repository.dart
+
 import 'package:hasbni/data/models/profile_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,17 +27,17 @@ class ProfileRepository {
     }
   }
 
-  // --- NEW UNIFIED FUNCTION ---
-  /// Creates or updates a user's profile.
+  
+  
   Future<void> upsertProfile(Map<String, dynamic> profileData) async {
     try {
       final userId = _client.auth.currentUser!.id;
       final dataToUpsert = {
-        'id': userId, // The primary key to check for conflict
+        'id': userId, 
         ...profileData,
         'updated_at': DateTime.now().toIso8601String(),
       };
-      // Upsert will create if 'id' doesn't exist, or update if it does.
+      
       await _client.from(_tableName).upsert(dataToUpsert);
     } catch (e) {
       print('Error upserting profile: $e');
@@ -45,5 +45,5 @@ class ProfileRepository {
     }
   }
 
-  // --- END NEW FUNCTION ---
+  
 }

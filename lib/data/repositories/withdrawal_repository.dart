@@ -1,4 +1,4 @@
-// lib/data/repositories/withdrawal_repository.dart
+
 import 'package:hasbni/data/models/withdrawal_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -25,7 +25,7 @@ class WithdrawalRepository {
     await _client.from(_tableName).insert(dataToInsert);
   }
 
-  // --- NEW METHOD FOR EDITING ---
+  
   Future<void> updateWithdrawal({
     required Withdrawal withdrawal,
     required double rateToUsd,

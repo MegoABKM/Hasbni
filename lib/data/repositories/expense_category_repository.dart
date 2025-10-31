@@ -1,4 +1,4 @@
-// lib/data/repositories/expense_category_repository.dart
+
 import 'package:hasbni/data/models/expense_category_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

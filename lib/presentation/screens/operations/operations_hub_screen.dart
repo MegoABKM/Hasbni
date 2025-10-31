@@ -1,4 +1,4 @@
-// lib/presentation/screens/operations/operations_hub_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:hasbni/presentation/screens/sales/point_of_sale_screen.dart';
 import 'package:hasbni/presentation/screens/sales/sales_history_screen.dart';
@@ -33,18 +33,18 @@ class OperationsHubScreen extends StatelessWidget {
             _buildOperationCard(
               context: context,
               title: 'إرجاع / استبدال',
-              icon: Icons.history, // أيقونة السجل هي الأنسب
+              icon: Icons.history, 
               color: Colors.orange,
               onTap: () {
-                // Navigate to the Sales History screen to find a sale
+                
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const SalesHistoryScreen()),
                 );
               },
             ),
-            // --- END CORRECTION ---
-            // يمكنك إضافة المزيد من البطاقات هنا في المستقبل
+            
+            
           ],
         ),
       ),

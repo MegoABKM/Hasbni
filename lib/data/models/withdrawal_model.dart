@@ -1,13 +1,13 @@
-// lib/data/models/withdrawal_model.dart
+
 import 'package:equatable/equatable.dart';
 
 class Withdrawal extends Equatable {
   final int? id;
   final String? description;
-  final double amount; // This will now always be the USD amount
+  final double amount; 
   final DateTime withdrawalDate;
 
-  // NEW FIELDS
+  
   final String currencyCode;
   final double amountInCurrency;
 
@@ -24,9 +24,9 @@ class Withdrawal extends Equatable {
     return Withdrawal(
       id: json['id'],
       description: json['description'],
-      amount: (json['amount'] as num).toDouble(), // The stored USD amount
+      amount: (json['amount'] as num).toDouble(), 
       withdrawalDate: DateTime.parse(json['withdrawal_date']),
-      // Populate new fields
+      
       currencyCode: json['currency_code'] ?? 'USD',
       amountInCurrency:
           (json['amount_in_currency'] as num?)?.toDouble() ??
@@ -38,7 +38,7 @@ class Withdrawal extends Equatable {
     return {
       if (id != null) 'id': id,
       'description': description,
-      // 'amount' will be calculated in the repository
+      
       'amount_in_currency': amountInCurrency,
       'currency_code': currencyCode,
       'withdrawal_date': withdrawalDate.toIso8601String(),

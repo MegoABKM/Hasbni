@@ -1,4 +1,4 @@
-// lib/presentation/screens/expenses/expenses_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
@@ -16,8 +16,8 @@ import 'widgets/add_edit_expense_dialog.dart';
 class ExpensesScreen extends StatelessWidget {
   const ExpensesScreen({super.key});
 
-  // --- THIS IS THE FIX ---
-  // The function signature is updated to accept an optional 'expense' object.
+  
+  
   void _showAddEditDialog(BuildContext context, {Expense? expense}) {
     showDialog(
       context: context,
@@ -28,7 +28,7 @@ class ExpensesScreen extends StatelessWidget {
             BlocProvider.value(value: context.read<ProfileCubit>()),
             BlocProvider.value(value: context.read<ExpenseCategoryCubit>()),
           ],
-          // Now we can correctly pass the expense object to the dialog.
+          
           child: AddEditExpenseDialog(expense: expense),
         );
       },
@@ -136,7 +136,7 @@ class ExpensesScreen extends StatelessWidget {
                                   fontSize: scaleConfig.scaleText(15),
                                 ),
                               ),
-                              // The onTap call is now correct because the function signature matches.
+                              
                               onTap: () {
                                 _showAddEditDialog(context, expense: expense);
                               },
@@ -153,7 +153,7 @@ class ExpensesScreen extends StatelessWidget {
         ),
         floatingActionButton: Builder(
           builder: (context) => FloatingActionButton(
-            // When adding, we call the function without the 'expense' parameter.
+            
             onPressed: () => _showAddEditDialog(context),
             tooltip: 'إضافة مصروف',
             child: const Icon(Icons.add),

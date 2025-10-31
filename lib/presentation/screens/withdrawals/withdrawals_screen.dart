@@ -1,4 +1,4 @@
-// lib/presentation/screens/withdrawals/withdrawals_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 class WithdrawalsScreen extends StatelessWidget {
   const WithdrawalsScreen({super.key});
 
-  // Updated to handle both add and edit
+  
   void _showAddEditDialog(BuildContext context, {Withdrawal? withdrawal}) {
     final profileState = context.read<ProfileCubit>().state;
     if (profileState.profile == null) {

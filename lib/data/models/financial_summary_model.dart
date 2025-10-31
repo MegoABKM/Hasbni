@@ -1,4 +1,4 @@
-// lib/data/models/financial_summary_model.dart
+
 import 'package:equatable/equatable.dart';
 
 class FinancialSummary extends Equatable {
@@ -29,7 +29,7 @@ class FinancialSummary extends Equatable {
     );
   }
 
-  // دالة فارغة للحالة الأولية
+  
   factory FinancialSummary.empty() {
     return const FinancialSummary(
       totalRevenue: 0,

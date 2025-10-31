@@ -1,4 +1,4 @@
-// lib/presentation/screens/reports/reports_screen.dart
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,7 +11,7 @@ import 'package:hasbni/presentation/cubits/reports/reports_cubit.dart';
 import 'package:hasbni/presentation/cubits/reports/reports_state.dart';
 import 'package:intl/intl.dart';
 
-// THIS IS NOW A STATELESS WIDGET THAT PROVIDES THE CUBITS
+
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
 
@@ -20,14 +20,14 @@ class ReportsScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => ReportsCubit()..loadSummary()),
-        // Provide the ProfileCubit and immediately load the profile
+        
         BlocProvider(create: (context) => ProfileCubit()..loadProfile()),
       ],
       child: Scaffold(
         appBar: AppBar(title: const Text('الجرد والتقارير')),
         body: BlocBuilder<ProfileCubit, ProfileState>(
           builder: (context, profileState) {
-            // First, handle the profile loading states
+            
             if (profileState.status == ProfileStatus.loading ||
                 profileState.status == ProfileStatus.initial) {
               return const Center(child: CircularProgressIndicator());
@@ -40,10 +40,10 @@ class ReportsScreen extends StatelessWidget {
               );
             }
 
-            // Once the profile is loaded, build the main reports view
+            
             return BlocBuilder<ReportsCubit, ReportsState>(
               builder: (context, reportsState) {
-                // Pass the loaded profile and the reports state to the actual UI widget
+                
                 return ReportsView(
                   profile: profileState.profile,
                   reportsState: reportsState,
@@ -57,7 +57,7 @@ class ReportsScreen extends StatelessWidget {
   }
 }
 
-// THIS IS NOW THE MAIN UI WIDGET, IT'S STATEFUL TO MANAGE LOCAL UI STATE
+
 class ReportsView extends StatefulWidget {
   final Profile? profile;
   final ReportsState reportsState;
@@ -76,7 +76,7 @@ class _ReportsViewState extends State<ReportsView> {
   bool _subtractWithdrawals = false;
   String _displayCurrency = 'USD';
 
-  // Helper function to convert amounts from USD to the target currency
+  
   double _convertFromUsd(
     double usdAmount,
     String targetCurrency,
@@ -89,11 +89,11 @@ class _ReportsViewState extends State<ReportsView> {
           .rateToUsd;
       return usdAmount * rate;
     } catch (e) {
-      return usdAmount; // fallback to USD if rate not found
+      return usdAmount; 
     }
   }
 
-  // Helper function to show the date range picker
+  
   Future<void> _pickDateRange(BuildContext context) async {
     final cubit = context.read<ReportsCubit>();
     final now = DateTime.now();
@@ -113,7 +113,7 @@ class _ReportsViewState extends State<ReportsView> {
     }
   }
 
-  // Helper function to format and display the current date range
+  
   String _formatDateRange(ReportsState state) {
     final now = DateTime.now();
     DateTime startDate;

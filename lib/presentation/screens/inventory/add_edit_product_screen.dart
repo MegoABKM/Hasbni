@@ -1,4 +1,4 @@
-// lib/presentation/screens/inventory/add_edit_product_screen.dart
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,9 +8,9 @@ import 'package:hasbni/presentation/cubits/inventory/inventory_cubit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-// -------------------------------------------------------------------
-// هذا الجزء يبقى كما هو تماماً، لا حاجة لتغييره في مشروعك إذا كان موجوداً
-// -------------------------------------------------------------------
+
+
+
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
   const AddEditProductScreen({super.key, this.product});
@@ -183,9 +183,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 }
 
-// -------------------------------------------------------------
-// هذا هو الجزء الذي تم تحديثه بالكامل.
-// -------------------------------------------------------------
+
+
+
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
 
@@ -229,7 +229,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             controller: _scannerController,
             onDetect: _handleBarcode,
           ),
-          // يمكنك إضافة إطار هنا لتوجيه المستخدم
+          
           Container(
             width: MediaQuery.of(context).size.width * 0.7,
             height: MediaQuery.of(context).size.width * 0.4,
@@ -270,7 +270,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                       if (image != null) {
                         SoundService().playBeep();
                         if (await _scannerController.analyzeImage(image.path)) {
-                          // The onDetect callback will be triggered if a barcode is found.
+                          
                           print('Barcode found in image!');
                         } else {
                           if (mounted) {

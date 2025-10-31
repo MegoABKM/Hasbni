@@ -1,4 +1,4 @@
-// lib/core/services/currency_converter_service.dart
+
 import 'package:hasbni/data/models/profile_model.dart';
 
 class CurrencyConverterService {
@@ -6,7 +6,7 @@ class CurrencyConverterService {
 
   CurrencyConverterService(this.profile);
 
-  /// Converts a price from the base accounting currency (USD) to a target currency.
+  
   double convert(double originalPriceInUsd, String targetCurrency) {
     if (targetCurrency == 'USD') {
       return originalPriceInUsd;
@@ -23,7 +23,7 @@ class CurrencyConverterService {
 
       return originalPriceInUsd * targetRate;
     } catch (e) {
-      return originalPriceInUsd; // Fallback to USD if rate not found
+      return originalPriceInUsd; 
     }
   }
 }

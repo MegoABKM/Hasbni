@@ -1,4 +1,4 @@
-// lib/data/models/profile_model.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
 
@@ -28,7 +28,7 @@ class Profile extends Equatable {
     }
     return Profile(
       id: json['id'],
-      // --- CORRECTION: Provide a default value to prevent crashes ---
+      
       shopName: json['shop_name'] ?? '',
       address: json['address'],
       phoneNumber: json['phone_number'],

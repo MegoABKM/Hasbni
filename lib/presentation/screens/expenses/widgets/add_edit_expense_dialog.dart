@@ -1,4 +1,4 @@
-// lib/presentation/screens/expenses/widgets/add_edit_expense_dialog.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
@@ -38,10 +38,10 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
       ...(profile?.exchangeRates ?? []),
     ];
 
-    // --- THIS IS THE FIX ---
-    // Correctly initialize state for both adding and editing.
+    
+    
     if (_isEditing) {
-      // If we are editing, populate fields from the passed expense object.
+      
       final expense = widget.expense!;
       _descriptionController = TextEditingController(text: expense.description);
       _amountController = TextEditingController(
@@ -52,11 +52,11 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
       _selectedCategoryId = expense.categoryId;
       _selectedRecurrence = expense.recurrence;
     } else {
-      // If we are adding, set default values.
+      
       _descriptionController = TextEditingController();
       _amountController = TextEditingController();
       _selectedDate = DateTime.now();
-      _selectedCurrency = 'USD'; // Default to base currency
+      _selectedCurrency = 'USD'; 
       _selectedRecurrence = 'one_time';
       _selectedCategoryId = null;
     }
@@ -137,7 +137,7 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
       final newExpense = Expense(
         id: widget.expense?.id,
         description: _descriptionController.text.trim(),
-        amount: 0, // Placeholder
+        amount: 0, 
         amountInCurrency: amount,
         currencyCode: _selectedCurrency,
         expenseDate: _selectedDate,
@@ -171,8 +171,8 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
             child: const Text('حذف', style: TextStyle(color: Colors.red)),
             onPressed: () {
               context.read<ExpensesCubit>().deleteExpense(widget.expense!.id!);
-              Navigator.of(ctx).pop(); // Close confirm dialog
-              Navigator.of(context).pop(); // Close add/edit dialog
+              Navigator.of(ctx).pop(); 
+              Navigator.of(context).pop(); 
             },
           ),
         ],
@@ -209,7 +209,7 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
                         DropdownMenuItem(value: cat.id, child: Text(cat.name)),
                   ),
                   const DropdownMenuItem(
-                    value: -1, // Special value to trigger 'add new'
+                    value: -1, 
                     child: Row(
                       children: [
                         Icon(Icons.add, size: 16),

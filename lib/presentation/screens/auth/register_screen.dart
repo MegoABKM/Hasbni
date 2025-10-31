@@ -1,4 +1,4 @@
-// lib/presentation/screens/auth/register_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
@@ -39,7 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      // Make AppBar transparent to blend with the gradient
+      
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('إنشاء حساب جديد'),
@@ -48,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         leading: BackButton(color: theme.colorScheme.primary),
       ),
       body: Container(
-        // Add a gradient background
+        
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
@@ -77,7 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Container(
-                  // Wrap form in a styled card
+                  
                   padding: const EdgeInsets.all(24.0),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withOpacity(0.8),
@@ -96,7 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Add an icon for branding
+                        
                         Icon(
                           Icons.person_add_alt_1_outlined,
                           size: 80,

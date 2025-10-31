@@ -1,4 +1,4 @@
-// lib/presentation/cubits/expense_category/expense_category_cubit.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/expense_category_model.dart';
 import 'package:hasbni/data/repositories/expense_category_repository.dart';
@@ -28,9 +28,9 @@ class ExpenseCategoryCubit extends Cubit<ExpenseCategoryState> {
   Future<void> addCategory(String name) async {
     try {
       await _repository.addCategory(name);
-      await loadCategories(); // Refresh the list
+      await loadCategories(); 
     } catch (e) {
-      // Handle error, e.g., duplicate name
+      
     }
   }
 }

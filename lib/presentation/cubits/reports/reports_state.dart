@@ -1,4 +1,4 @@
-// lib/presentation/cubits/reports/reports_state.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/financial_summary_model.dart';
 
@@ -8,21 +8,21 @@ enum TimePeriod { today, week, month, year, custom }
 
 class ReportsState extends Equatable {
   final ReportsStatus status;
-  final FinancialSummary summary; // <-- تم جعلها final
+  final FinancialSummary summary; 
   final TimePeriod selectedPeriod;
   final String? errorMessage;
   final DateTime? customStartDate;
   final DateTime? customEndDate;
 
-  // --- CORRECTION: The constructor is no longer 'const' ---
+  
   ReportsState({
     this.status = ReportsStatus.initial,
-    FinancialSummary? summary, // <-- تمت إزالة القيمة الافتراضية من هنا
+    FinancialSummary? summary, 
     this.selectedPeriod = TimePeriod.month,
     this.errorMessage,
     this.customStartDate,
     this.customEndDate,
-    // --- CORRECTION: Assign the default value in the initializer list ---
+    
   }) : summary = summary ?? FinancialSummary.empty();
 
   ReportsState copyWith({

@@ -1,4 +1,4 @@
-// lib/presentation/screens/settings/settings_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
@@ -6,15 +6,15 @@ import 'package:hasbni/data/models/profile_model.dart';
 import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';
 import 'package:hasbni/presentation/cubits/profile/profile_state.dart';
 
-// This part is correct and doesn't need changes.
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProfileCubit, ProfileState>(
-      // We use listenWhen to only show the snackbar once per success/failure message
-      // to avoid showing it multiple times on other state changes.
+      
+      
       listenWhen: (previous, current) =>
           previous.successMessage != current.successMessage ||
           previous.errorMessage != current.errorMessage,
@@ -37,14 +37,14 @@ class SettingsScreen extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        // This loading check is correct.
+        
         if (state.profile == null && state.status == ProfileStatus.loading) {
           return Scaffold(
             appBar: AppBar(title: const Text('الإعدادات')),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-        // Pass the profile and loading status to the stateful view.
+        
         return SettingsView(
           profile: state.profile,
           isLoading: state.status == ProfileStatus.loading,
@@ -54,7 +54,7 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-// This is the main view widget
+
 class SettingsView extends StatefulWidget {
   final Profile? profile;
   final bool isLoading;
@@ -67,16 +67,16 @@ class SettingsView extends StatefulWidget {
 class _SettingsViewState extends State<SettingsView> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers for Shop Info
+  
   late TextEditingController _shopNameController;
   late TextEditingController _addressController;
   late TextEditingController _phoneController;
 
-  // Controllers for Manager Security
+  
   late TextEditingController _managerPasswordController;
   late TextEditingController _confirmManagerPasswordController;
 
-  // Controllers for Exchange Rates
+  
   final List<String> _availableCurrencies = [
     'LYD',
     'USD',
@@ -91,7 +91,7 @@ class _SettingsViewState extends State<SettingsView> {
   void initState() {
     super.initState();
     _initializeControllers();
-    // Initialize password controllers separately as they are always empty at start.
+    
     _managerPasswordController = TextEditingController();
     _confirmManagerPasswordController = TextEditingController();
   }
@@ -99,7 +99,7 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   void didUpdateWidget(covariant SettingsView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Re-initialize if the profile data changes (e.g., after saving)
+    
     if (widget.profile != oldWidget.profile) {
       _initializeControllers();
     }
@@ -152,15 +152,15 @@ class _SettingsViewState extends State<SettingsView> {
       final profileCubit = context.read<ProfileCubit>();
       final newPassword = _managerPasswordController.text;
 
-      // 1. Handle password saving if a new one is entered
+      
       if (newPassword.isNotEmpty) {
         await profileCubit.setManagerPassword(newPassword);
         _managerPasswordController.clear();
         _confirmManagerPasswordController.clear();
-        FocusScope.of(context).unfocus(); // Hide keyboard
+        FocusScope.of(context).unfocus(); 
       }
 
-      // 2. Handle profile and exchange rate saving
+      
       final existingRates = widget.profile?.exchangeRates ?? [];
       final ratesToUpdate = <ExchangeRate>[];
       _rateControllers.forEach((code, controller) {
@@ -226,7 +226,7 @@ class _SettingsViewState extends State<SettingsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- Section 1: Shop Info ---
+                
                 Text(
                   'بيانات المتجر',
                   style: Theme.of(context).textTheme.titleLarge,
@@ -259,7 +259,7 @@ class _SettingsViewState extends State<SettingsView> {
                   keyboardType: TextInputType.phone,
                 ),
 
-                // --- Section 2: Manager Security ---
+                
                 const Divider(height: 48),
                 Text(
                   'أمان المدير',
@@ -282,7 +282,7 @@ class _SettingsViewState extends State<SettingsView> {
                     if (value != null && value.isNotEmpty && value.length < 4) {
                       return 'كلمة المرور يجب أن تكون 4 أحرف على الأقل';
                     }
-                    // This check is important: if confirm password has a value but this is empty, it's an error.
+                    
                     if (_confirmManagerPasswordController.text.isNotEmpty &&
                         (value == null || value.isEmpty)) {
                       return 'الرجاء إدخال كلمة المرور هنا أيضاً';
@@ -306,7 +306,7 @@ class _SettingsViewState extends State<SettingsView> {
                   },
                 ),
 
-                // --- Section 3: Exchange Rates ---
+                
                 const Divider(height: 48),
                 Text(
                   'أسعار الصرف',

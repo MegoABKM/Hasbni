@@ -1,4 +1,4 @@
-// lib/presentation/cubits/sale_detail/sale_detail_cubit.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/sale_model.dart';
 import 'package:hasbni/data/repositories/sales_repository.dart';
@@ -65,7 +65,7 @@ class SaleDetailCubit extends Cubit<SaleDetailState> {
   }) async {
     emit(state.copyWith(status: SaleDetailStatus.processingReturn));
     try {
-      // << 4. GET the employeeId from the session state
+      
       final employeeId = sessionCubit.state.currentEmployee?.id;
 
       final result = await _salesRepository.processExchange(
@@ -74,7 +74,7 @@ class SaleDetailCubit extends Cubit<SaleDetailState> {
         newItems: newItems,
         currencyCode: currencyCode,
         rateToUsdAtSale: rateToUsdAtSale,
-        employeeId: employeeId, // << 5. PASS the employeeId to the repository
+        employeeId: employeeId, 
       );
       final diff = (result['price_difference'] as num).toDouble();
       final currency = result['currency_code'] ?? currencyCode;

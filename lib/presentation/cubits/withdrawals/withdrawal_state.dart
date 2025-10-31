@@ -1,4 +1,4 @@
-// lib/presentation/cubits/withdrawals/withdrawals_state.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/withdrawal_model.dart';
 

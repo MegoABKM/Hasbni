@@ -17,8 +17,8 @@ import 'package:hasbni/core/services/sound_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
-    // استبدل هذه القيم بالقيم الخاصة بمشروعك
-    url: 'https://ozqxjvureteaawvkelcl.supabase.co',
+    
+    url: 'https:
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96cXhqdnVyZXRlYWF3dmtlbGNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMjQ3NjgsImV4cCI6MjA2NjcwMDc2OH0.o0PIlWQo6AfGXR9ytQmCojKfJji_fw6mRtmQCoKtGzs',
   );
@@ -53,13 +53,13 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// --- THIS WIDGET CONTAINS THE FIX ---
+
 class AppNavigator extends StatelessWidget {
   const AppNavigator({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // We still use a listener to clear the session on sign-out.
+    
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, authState) {
         if (authState.status == AuthStatus.unauthenticated) {
@@ -72,34 +72,34 @@ class AppNavigator extends StatelessWidget {
             case AuthStatus.authenticated:
               final sessionCubit = context.read<SessionCubit>();
 
-              // --- START OF THE FIX ---
-              // If the user is authenticated but the session status is still 'initial',
-              // it means we haven't tried to load the persisted role yet.
-              // We trigger it here, inside the builder. This is safe because the
-              // check prevents it from being called in a loop.
+              
+              
+              
+              
+              
               if (sessionCubit.state.status == SessionStatus.initial) {
                 sessionCubit.initializeSession();
               }
-              // --- END OF THE FIX ---
+              
 
-              // This inner builder now reacts to the SessionCubit's state changes.
+              
               return BlocBuilder<SessionCubit, SessionState>(
                 builder: (context, sessionState) {
-                  // If the session role has been successfully determined...
+                  
                   if (sessionState.status == SessionStatus.determined) {
                     if (sessionState.role == SessionRole.manager) {
-                      return const HomeScreen(); // Navigate to Manager home
+                      return const HomeScreen(); 
                     } else if (sessionState.role == SessionRole.employee) {
-                      return const EmployeeHomeScreen(); // Navigate to Employee home
+                      return const EmployeeHomeScreen(); 
                     }
                   }
-                  // If the session needs a role to be selected...
+                  
                   if (sessionState.status == SessionStatus.needsSelection) {
-                    return const RoleSelectionScreen(); // Show role selection
+                    return const RoleSelectionScreen(); 
                   }
-                  // Otherwise (status is initial or loading), show a splash screen.
-                  // This is what the user sees during the brief moment
-                  // initializeSession() is running.
+                  
+                  
+                  
                   return const SplashScreen();
                 },
               );

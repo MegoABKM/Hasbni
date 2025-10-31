@@ -1,4 +1,4 @@
-// lib/presentation/screens/sales/sales_history_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/presentation/cubits/sales_history/sale_history_cubit.dart';
@@ -98,7 +98,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                       ),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
-                        // عند العودة من شاشة التفاصيل، قم بتحديث القائمة
+                        
                         await Navigator.push(
                           context,
                           MaterialPageRoute(

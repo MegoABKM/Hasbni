@@ -1,4 +1,4 @@
-// lib/presentation/cubits/sale_detail/sale_detail_state.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/sale_detail_model.dart';
 

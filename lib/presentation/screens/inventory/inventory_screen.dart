@@ -1,4 +1,4 @@
-// lib/presentation/screens/inventory/inventory_screen.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -122,40 +122,40 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  // Widget _buildCurrencySelector() {
-  //   return BlocBuilder<AuthCubit, AuthState>(
-  //     builder: (context, authState) {
-  //       final profile = authState.profile;
-  //       if (profile == null) return const SizedBox.shrink();
+  
+  
+  
+  
+  
 
-  //       final List<String> currencies = [
-  //         'USD',
-  //         ...profile.exchangeRates.map((r) => r.currencyCode),
-  //       ];
-  //       if (!currencies.contains(profile.currency)) {
-  //         currencies.insert(0, profile.currency);
-  //       }
+  
+  
+  
+  
+  
+  
+  
 
-  //       return Padding(
-  //         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-  //         child: DropdownButtonFormField<String>(
-  //           value: _selectedCurrency,
-  //           decoration: const InputDecoration(
-  //             labelText: 'عرض الأسعار بعملة',
-  //             border: OutlineInputBorder(),
-  //             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-  //           ),
-  //           items: currencies
-  //               .toSet()
-  //               .toList()
-  //               .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-  //               .toList(),
-  //           onChanged: (value) => setState(() => _selectedCurrency = value),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   Widget _buildBody(BuildContext context, InventoryState state) {
     if (state.status == InventoryStatus.loading && state.products.isEmpty) {

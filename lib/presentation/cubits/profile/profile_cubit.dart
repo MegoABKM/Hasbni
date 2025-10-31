@@ -1,4 +1,4 @@
-// lib/presentation/cubits/profile/profile_cubit.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
 import 'package:hasbni/data/repositories/auth_repository.dart';
@@ -9,7 +9,7 @@ import 'profile_state.dart';
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileRepository _profileRepository;
   final ExchangeRateRepository _exchangeRateRepository;
-  final AuthRepository _authRepository; // Add this
+  final AuthRepository _authRepository; 
 
   ProfileCubit()
     : _profileRepository = ProfileRepository(),
@@ -18,7 +18,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       super(const ProfileState());
 
   Future<void> loadProfile() async {
-    // Only show full-screen loading if there's no profile data yet.
+    
     if (state.profile == null) {
       emit(state.copyWith(status: ProfileStatus.loading));
     }
@@ -28,7 +28,7 @@ class ProfileCubit extends Cubit<ProfileState> {
         state.copyWith(
           status: ProfileStatus.success,
           profile: () => profile,
-          // Clear any previous messages
+          
           errorMessage: null,
           successMessage: null,
         ),
@@ -43,22 +43,22 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  // --- NEW CONSOLIDATED FUNCTION ---
-  /// Saves all settings (profile and rates) in a single atomic operation.
+  
+  
   Future<void> saveSettings({
     required Map<String, dynamic> profileData,
     required List<ExchangeRate> rates,
   }) async {
     emit(state.copyWith(status: ProfileStatus.loading));
     try {
-      // Perform both updates within one logical step for the user.
+      
       await _profileRepository.upsertProfile(profileData);
       await _exchangeRateRepository.upsertExchangeRates(rates);
 
-      // Reload the profile to get the fresh data.
+      
       final updatedProfile = await _profileRepository.getCurrentUserProfile();
 
-      // Emit a final success state with the updated profile and a success message.
+      
       emit(
         state.copyWith(
           status: ProfileStatus.success,
@@ -67,7 +67,7 @@ class ProfileCubit extends Cubit<ProfileState> {
         ),
       );
     } catch (e) {
-      // If anything fails, emit a failure state.
+      
       emit(
         state.copyWith(
           status: ProfileStatus.failure,
@@ -96,9 +96,9 @@ class ProfileCubit extends Cubit<ProfileState> {
       );
     }
   }
-  // --- END OF NEW FUNCTION ---
+  
 
-  // The old separate functions are no longer needed.
-  // Future<void> saveProfile(...)
-  // Future<void> updateExchangeRates(...)
+  
+  
+  
 }

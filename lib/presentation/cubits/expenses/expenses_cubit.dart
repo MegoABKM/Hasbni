@@ -1,4 +1,4 @@
-// lib/presentation/cubits/expenses/expenses_cubit.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/expense_model.dart';
 import 'package:hasbni/data/repositories/expense_repository.dart';
@@ -26,26 +26,26 @@ class ExpensesCubit extends Cubit<ExpensesState> {
     }
   }
 
-  // MODIFIED
+  
   Future<void> addExpense({
     required Expense expense,
     required double rateToUsd,
   }) async {
     await _repository.addExpense(expense: expense, rateToUsd: rateToUsd);
-    loadExpenses(); // Reload list
+    loadExpenses(); 
   }
 
-  // MODIFIED
+  
   Future<void> updateExpense({
     required Expense expense,
     required double rateToUsd,
   }) async {
     await _repository.updateExpense(expense: expense, rateToUsd: rateToUsd);
-    loadExpenses(); // Reload list
+    loadExpenses(); 
   }
 
   Future<void> deleteExpense(int id) async {
     await _repository.deleteExpense(id);
-    loadExpenses(); // Reload list
+    loadExpenses(); 
   }
 }

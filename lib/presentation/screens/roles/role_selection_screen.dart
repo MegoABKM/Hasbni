@@ -1,4 +1,4 @@
-// lib/presentation/screens/roles/role_selection_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -11,7 +11,7 @@ import 'package:hasbni/presentation/cubits/session/session_cubit.dart';
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
-  // --- Helper methods for dialogs remain the same ---
+  
   void _showManagerPasswordDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -118,11 +118,11 @@ class RoleSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // THE FIX: A simple Scaffold. It will automatically use the
-    // `scaffoldBackgroundColor` from your theme for the ENTIRE screen.
+    
+    
     return Scaffold(
-      // The background color is now controlled by your AppTheme.
-      // All the complex Stack and Container widgets have been removed.
+      
+      
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -130,7 +130,7 @@ class RoleSelectionScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Branding and Welcome
+                
                 Icon(
                   Icons.how_to_reg_outlined,
                   size: 80,
@@ -152,7 +152,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 48),
 
-                // Animated Role Selection Cards
+                
                 AnimationLimiter(
                   child: Column(
                     children: AnimationConfiguration.toStaggeredList(
@@ -198,7 +198,7 @@ class RoleSelectionScreen extends StatelessWidget {
   }
 }
 
-// Custom widget for role selection cards (No changes needed here)
+
 class _RoleSelectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -260,7 +260,7 @@ class _RoleSelectionCard extends StatelessWidget {
   }
 }
 
-// The _ManagerPasswordDialog remains the same
+
 class _ManagerPasswordDialog extends StatefulWidget {
   const _ManagerPasswordDialog();
 

@@ -1,4 +1,4 @@
-// lib/data/repositories/product_repository.dart
+
 
 import 'package:hasbni/data/models/product_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,7 +7,7 @@ class ProductRepository {
   final SupabaseClient _client = Supabase.instance.client;
   final String _tableName = 'products';
 
-  /// جلب المنتجات مع دعم الترقيم والفرز والبحث
+  
   Future<List<Product>> getProducts({
     required int page,
     required int limit,
@@ -21,14 +21,14 @@ class ProductRepository {
 
       var query = _client.from(_tableName).select();
 
-      // إضافة شرط البحث إذا كان موجوداً
+      
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        // نستخدم ilike للبحث غير الحساس لحالة الأحرف
+        
         final queryLower = '%${searchQuery.toLowerCase()}%';
         query = query.or('name.ilike.$queryLower,barcode.ilike.$queryLower');
       }
 
-      // تطبيق الفرز والترقيم
+      
       final data = await query
           .order(sortBy, ascending: ascending)
           .range(from, to);
@@ -41,7 +41,7 @@ class ProductRepository {
     }
   }
 
-  /// إضافة منتج جديد
+  
   Future<void> addProduct(Map<String, dynamic> productData) async {
     try {
       await _client.from(_tableName).insert(productData);
@@ -51,7 +51,7 @@ class ProductRepository {
     }
   }
 
-  /// تعديل منتج موجود
+  
   Future<void> updateProduct(
     int productId,
     Map<String, dynamic> productData,
@@ -64,7 +64,7 @@ class ProductRepository {
     }
   }
 
-  /// حذف منتج
+  
   Future<void> deleteProduct(int productId) async {
     try {
       await _client.from(_tableName).delete().eq('id', productId);

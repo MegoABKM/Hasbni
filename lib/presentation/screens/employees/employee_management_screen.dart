@@ -1,17 +1,17 @@
-// lib/presentation/screens/employees/employee_management_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/employee_model.dart';
 import 'package:hasbni/presentation/cubits/employees/employee_cubit.dart';
 import 'package:hasbni/presentation/cubits/employees/employees_state.dart';
 
-// This is the dialog we will create in the next step
+
 import 'package:hasbni/presentation/screens/employees/widgets/add_edit_employee_dialog.dart';
 
 class EmployeeManagementScreen extends StatelessWidget {
   const EmployeeManagementScreen({super.key});
 
-  // This function will open the dialog for adding or editing an employee
+  
   void _showAddEditDialog(BuildContext context, {Employee? employee}) {
     showDialog(
       context: context,

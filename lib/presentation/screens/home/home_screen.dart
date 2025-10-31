@@ -1,4 +1,4 @@
-// lib/presentation/screens/home/home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -24,7 +24,7 @@ class HomeScreen extends StatelessWidget {
       create: (context) => ProfileCubit()..loadProfile(),
       child: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) {
-          // Determine shop name for the AppBar title
+          
           final String shopName =
               state.profile?.shopName != null &&
                   state.profile!.shopName.isNotEmpty
@@ -32,7 +32,7 @@ class HomeScreen extends StatelessWidget {
               : 'لوحة التحكم';
 
           return Scaffold(
-            // The AppBar now holds the shop name and actions
+            
             appBar: AppBar(
               title: Text(
                 shopName,
@@ -42,12 +42,12 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               actions: [
-                // Settings Icon Button
+                
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
                   tooltip: 'الإعدادات',
                   onPressed: () {
-                    // Ensure profile cubit is available before navigating
+                    
                     if (state.profile != null) {
                       Navigator.push(
                         context,
@@ -61,7 +61,7 @@ class HomeScreen extends StatelessWidget {
                     }
                   },
                 ),
-                // Logout Icon Button
+                
                 IconButton(
                   icon: const Icon(Icons.logout_outlined),
                   tooltip: 'تسجيل الخروج',
@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // A new helper method to build the body based on the state
+  
   Widget _buildBody(BuildContext context, ProfileState state) {
     if (state.status == ProfileStatus.loading ||
         state.status == ProfileStatus.initial) {
@@ -99,14 +99,14 @@ class HomeScreen extends StatelessWidget {
         ),
       );
     }
-    // Once data is loaded, build the menu list
+    
     return _buildMenuList(context);
   }
 
   Widget _buildMenuList(BuildContext context) {
     final theme = Theme.of(context);
 
-    // --- Data Definitions for Menu Items ---
+    
     final List<Map<String, dynamic>> dailyOps = [
       {
         'title': 'نقطة البيع',
@@ -203,7 +203,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Helper to build animated list items for each section
+  
   List<Widget> _buildAnimatedList(List<Map<String, dynamic>> items) {
     return AnimationConfiguration.toStaggeredList(
       duration: const Duration(milliseconds: 375),
@@ -225,7 +225,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Helper for section headers
+  
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0, right: 8.0, top: 8.0),

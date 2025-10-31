@@ -1,6 +1,6 @@
-// lib/presentation/screens/sales/receipt_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for loading assets
+import 'package:flutter/services.dart'; 
 import 'package:hasbni/core/utils/app_constants.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
 import 'package:hasbni/data/models/profile_model.dart';
@@ -46,7 +46,7 @@ class ReceiptScreen extends StatelessWidget {
     final doc = pw.Document();
     final font = await PdfGoogleFonts.cairoRegular();
 
-    // --- Load the logo image from assets ---
+    
     final ByteData logoData = await rootBundle.load('assets/images/logo.png');
     final Uint8List logoBytes = logoData.buffer.asUint8List();
     final logoImage = pw.MemoryImage(logoBytes);
@@ -60,7 +60,7 @@ class ReceiptScreen extends StatelessWidget {
         build: (pw.Context context) {
           return pw.Directionality(
             textDirection: pw.TextDirection.rtl,
-            // --- ADD PADDING TO THE ENTIRE PAGE ---
+            
             child: pw.Padding(
               padding: const pw.EdgeInsets.symmetric(
                 horizontal: 20,
@@ -77,7 +77,7 @@ class ReceiptScreen extends StatelessWidget {
                   pw.Divider(height: 30, thickness: 1),
                   _buildTotal(saleDetail),
                   pw.Spacer(),
-                  _buildFooter(logoImage), // Pass the logo image to the footer
+                  _buildFooter(logoImage), 
                 ],
               ),
             ),
@@ -174,7 +174,7 @@ class ReceiptScreen extends StatelessWidget {
     );
   }
 
-  // --- UPDATED FOOTER TO ACCEPT THE LOGO IMAGE ---
+  
   pw.Widget _buildFooter(pw.ImageProvider logoImage) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.center,

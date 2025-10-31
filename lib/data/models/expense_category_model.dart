@@ -1,4 +1,4 @@
-// lib/data/models/expense_category_model.dart
+
 import 'package:equatable/equatable.dart';
 
 class ExpenseCategory extends Equatable {

@@ -1,4 +1,4 @@
-// lib/presentation/screens/employees/widgets/add_edit_employee_dialog.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/employee_model.dart';
@@ -67,8 +67,8 @@ class _AddEditEmployeeDialogState extends State<AddEditEmployeeDialog> {
               context.read<EmployeesCubit>().deleteEmployee(
                 widget.employee!.id,
               );
-              Navigator.of(ctx).pop(); // Close confirm dialog
-              Navigator.of(context).pop(); // Close add/edit dialog
+              Navigator.of(ctx).pop(); 
+              Navigator.of(context).pop(); 
             },
           ),
         ],

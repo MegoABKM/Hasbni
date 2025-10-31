@@ -1,4 +1,4 @@
-// lib/data/repositories/sales_repository.dart
+
 import 'package:hasbni/data/models/sale_detail_model.dart';
 import 'package:hasbni/data/models/sale_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,7 +20,7 @@ class SalesRepository {
         'p_rate_to_usd_at_sale': rateToUsdAtSale,
         'p_employee_id': employeeId,
       };
-      // This line is important and correct.
+      
       params.removeWhere((key, value) => value == null);
 
       final saleId = await _client.rpc(
@@ -80,25 +80,25 @@ class SalesRepository {
     required List<SaleItem> newItems,
     required String currencyCode,
     required double rateToUsdAtSale,
-    int? employeeId, // This parameter is correct
+    int? employeeId, 
   }) async {
     try {
       final newItemsJson = newItems.map((item) => item.toRpcJson()).toList();
-      // Use the same params map and removeWhere pattern
+      
       final params = {
         'p_sale_item_id_to_return': saleItemIdToReturn,
         'p_return_quantity': returnQuantity,
         'p_new_sale_items_data': newItemsJson,
         'p_currency_code': currencyCode,
         'p_rate_to_usd_at_sale': rateToUsdAtSale,
-        'p_employee_id': employeeId, // Pass the employeeId
+        'p_employee_id': employeeId, 
       };
-      // ** ADD THIS LINE FOR CONSISTENCY AND ROBUSTNESS **
+      
       params.removeWhere((key, value) => value == null);
 
       final result = await _client.rpc(
         'process_exchange',
-        params: params, // Pass the cleaned map
+        params: params, 
       );
       return result as Map<String, dynamic>;
     } catch (e) {

@@ -1,13 +1,13 @@
-// lib/data/repositories/auth_repository.dart
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepository {
   final SupabaseClient _client = Supabase.instance.client;
 
-  // --- THIS IS THE CRITICAL FIX ---
-  // We explicitly tell Dart to use the AuthState from the Supabase package.
+  
+  
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
-  // --- END OF FIX ---
+  
 
   User? get currentUser => _client.auth.currentUser;
 
@@ -63,7 +63,7 @@ class AuthRepository {
     await _client.rpc('set_manager_password', params: {'p_password': password});
   }
 
-  // This now asks Supabase to do the plain text comparison.
+  
   Future<bool> verifyManagerPassword(String password) async {
     final result = await _client.rpc(
       'verify_manager_password',
@@ -72,7 +72,7 @@ class AuthRepository {
     return result as bool;
   }
 
-  // This remains the same and calls the new version of the RPC function.
+  
   Future<bool> isManagerPasswordSet() async {
     final result = await _client.rpc('is_manager_password_set');
     return result as bool;
