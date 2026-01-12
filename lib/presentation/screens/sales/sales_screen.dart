@@ -1,6 +1,3 @@
-
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/services/currency_converter_service.dart';
@@ -54,6 +51,7 @@ class SalesScreen extends StatelessWidget {
                 profileState.status == ProfileStatus.initial) {
               return const Center(child: CircularProgressIndicator());
             }
+
             if (profileState.status == ProfileStatus.failure ||
                 profileState.profile == null) {
               return Center(
@@ -63,66 +61,110 @@ class SalesScreen extends StatelessWidget {
               );
             }
 
-            return BlocConsumer<SalesCubit, SalesState>(
-              listener: (context, salesState) {
-                if (salesState.status == SalesStatus.success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'تمت العملية بنجاح. رقم الفاتورة: ${salesState.lastSaleId}',
-                      ),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  Navigator.of(context).pop();
-                  if (isExchangeMode) Navigator.of(context).pop();
-                } else if (salesState.status == SalesStatus.failure) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(salesState.errorMessage ?? 'حدث خطأ'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              builder: (context, salesState) {
-                return Column(
-                  children: [
-                    if (isExchangeMode) _buildExchangeHeader(context),
-                    _buildActionButtons(context),
-                    const Divider(),
-                    _buildTableHeader(context),
-                    Expanded(
-                      child: salesState.cart.isEmpty
-                          ? _buildEmptyCart(context)
-                          : ListView.builder(
-                              itemCount: salesState.cart.length,
-                              itemBuilder: (ctx, index) {
-                                final item = salesState.cart[index];
-                                return _buildSaleItemRow(
-                                  context,
-                                  item,
-                                  index + 1,
-                                );
-                              },
-                            ),
-                    ),
-                    if (salesState.cart.isNotEmpty)
-                      _SummaryBarView(
-                        salesState: salesState,
-                        profile: profileState.profile!,
-                        isExchangeMode: isExchangeMode,
-                        itemToExchange: itemToExchange,
-                        returnQuantity: returnQuantity,
-                        saleDetailCubit: saleDetailCubit,
-                      ),
-                  ],
-                );
-              },
+            return _SalesContent(
+              profile: profileState.profile!,
+              isExchangeMode: isExchangeMode,
+              itemToExchange: itemToExchange,
+              returnQuantity: returnQuantity,
+              saleDetailCubit: saleDetailCubit,
             );
           },
         ),
       ),
+    );
+  }
+}
+
+class _SalesContent extends StatefulWidget {
+  final Profile profile;
+  final bool isExchangeMode;
+  final SaleDetailItem? itemToExchange;
+  final int? returnQuantity;
+  final SaleDetailCubit? saleDetailCubit;
+
+  const _SalesContent({
+    required this.profile,
+    required this.isExchangeMode,
+    this.itemToExchange,
+    this.returnQuantity,
+    this.saleDetailCubit,
+  });
+
+  @override
+  State<_SalesContent> createState() => _SalesContentState();
+}
+
+class _SalesContentState extends State<_SalesContent> {
+  String _selectedPaymentCurrency = 'USD';
+
+  @override
+  Widget build(BuildContext context) {
+    final converter = CurrencyConverterService(widget.profile);
+
+    return BlocConsumer<SalesCubit, SalesState>(
+      listener: (context, salesState) {
+        if (salesState.status == SalesStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'تمت العملية بنجاح. رقم الفاتورة: ${salesState.lastSaleId}',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+          if (widget.isExchangeMode) Navigator.of(context).pop();
+        } else if (salesState.status == SalesStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(salesState.errorMessage ?? 'حدث خطأ'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      builder: (context, salesState) {
+        return Column(
+          children: [
+            if (widget.isExchangeMode) _buildExchangeHeader(context, converter),
+            _buildActionButtons(context),
+            const Divider(),
+            _buildTableHeader(context),
+            
+            // --- FIX: KeyedSubtree forces rebuild when currency changes ---
+            Expanded(
+              key: ValueKey(_selectedPaymentCurrency), 
+              child: salesState.cart.isEmpty
+                  ? _buildEmptyCart(context)
+                  : ListView.builder(
+                      itemCount: salesState.cart.length,
+                      itemBuilder: (ctx, index) {
+                        final item = salesState.cart[index];
+                        return _buildSaleItemRow(
+                            context, item, index + 1, converter);
+                      },
+                    ),
+            ),
+            
+            if (salesState.cart.isNotEmpty)
+              _SummaryBarView(
+                salesState: salesState,
+                profile: widget.profile,
+                isExchangeMode: widget.isExchangeMode,
+                itemToExchange: widget.itemToExchange,
+                returnQuantity: widget.returnQuantity,
+                saleDetailCubit: widget.saleDetailCubit,
+                selectedCurrency: _selectedPaymentCurrency,
+                onCurrencyChanged: (newCurrency) {
+                  print("Currency Changed to: $newCurrency"); // Debug
+                  setState(() {
+                    _selectedPaymentCurrency = newCurrency;
+                  });
+                },
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -131,35 +173,21 @@ class SalesScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.shopping_cart_outlined,
-            size: 100,
-            color: Colors.grey,
-          ),
+          const Icon(Icons.shopping_cart_outlined,
+              size: 100, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
             'السلة فارغة',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40.0),
-            child: Text(
-              'ابدأ بإضافة منتجات عبر زر البحث أو مسح الباركود',
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(color: Colors.grey),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _showSearch(context),
             icon: const Icon(Icons.search),
             label: const Text('البحث عن منتج'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
           ),
         ],
       ),
@@ -177,22 +205,20 @@ class SalesScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildExchangeHeader(BuildContext context) {
-    
-    final profile = context.read<ProfileCubit>().state.profile;
-    final converter = CurrencyConverterService(profile);
-
-    
-    
-    
-    final returnedValue = itemToExchange!.priceAtSale * returnQuantity!;
+  Widget _buildExchangeHeader(
+      BuildContext context, CurrencyConverterService converter) {
+    final returnedValueUsd =
+        widget.itemToExchange!.priceAtSale * widget.returnQuantity!;
+    final displayedValue =
+        converter.convert(returnedValueUsd, _selectedPaymentCurrency);
 
     return Container(
       color: Colors.amber.withOpacity(0.2),
       padding: const EdgeInsets.all(12),
       child: Center(
         child: Text(
-          'استبدال $returnQuantity من "${itemToExchange!.productName}" | قيمة المرتجع: ~${returnedValue.toStringAsFixed(2)}',
+          'استبدال ${widget.returnQuantity} من "${widget.itemToExchange!.productName}"\n'
+          'قيمة المرتجع: ${displayedValue.toStringAsFixed(2)} $_selectedPaymentCurrency',
           style: const TextStyle(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
@@ -240,9 +266,7 @@ class SalesScreen extends StatelessWidget {
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('لم يتم العثور على منتج بهذا الباركود.'),
-                      ),
+                      const SnackBar(content: Text('لم يتم العثور على منتج.')),
                     );
                   }
                 }
@@ -258,38 +282,34 @@ class SalesScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Theme.of(context).splashColor,
-      child: const Row(
+      child: Row(
         children: [
-          Expanded(
-            flex: 1,
-            child: Text('#', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          Expanded(
-            flex: 5,
-            child: Text('الصنف', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
+          const Expanded(
+              flex: 1,
+              child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
+          const Expanded(
+              flex: 5,
+              child:
+                  Text('الصنف', style: TextStyle(fontWeight: FontWeight.bold))),
+          const Expanded(
+              flex: 3,
+              child: Text('الكمية',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
             flex: 3,
             child: Text(
-              'الكمية',
+              'السعر ($_selectedPaymentCurrency)',
               textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
             flex: 3,
             child: Text(
-              'السعر (USD)', 
+              'الإجمالي ($_selectedPaymentCurrency)',
               textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              'الإجمالي (USD)', 
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -297,45 +317,52 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSaleItemRow(BuildContext context, SaleItem item, int index) {
+  Widget _buildSaleItemRow(BuildContext context, SaleItem item, int index,
+      CurrencyConverterService converter) {
+    
+    // --- DEBUG ---
+    // print("Row building for ${item.product.name}. Currency: $_selectedPaymentCurrency");
+    
+    final price =
+        converter.convert(item.sellingPrice, _selectedPaymentCurrency);
+    final subtotal = converter.convert(item.subtotal, _selectedPaymentCurrency);
+
     return InkWell(
       onTap: () {
         showDialog(
           context: context,
           builder: (_) => BlocProvider.value(
             value: context.read<SalesCubit>(),
-            child: EditSaleItemDialog(item: item, currency: 'USD'),
+            child: EditSaleItemDialog(
+              item: item,
+              currency: 'USD',
+            ),
           ),
         );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
-          ),
+          border:
+              Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
         ),
         child: Row(
           children: [
             Expanded(
-              flex: 1,
-              child: Text(index.toString(), textAlign: TextAlign.center),
-            ),
+                flex: 1,
+                child: Text(index.toString(), textAlign: TextAlign.center)),
             Expanded(
-              flex: 5,
-              child: Text(item.product.name, overflow: TextOverflow.ellipsis),
-            ),
+                flex: 5,
+                child:
+                    Text(item.product.name, overflow: TextOverflow.ellipsis)),
             Expanded(
-              flex: 3,
-              child: Text(
-                item.quantity.toString(),
-                textAlign: TextAlign.center,
-              ),
-            ),
+                flex: 3,
+                child: Text(item.quantity.toString(),
+                    textAlign: TextAlign.center)),
             Expanded(
               flex: 3,
               child: Text(
-                item.sellingPrice.toStringAsFixed(2),
+                price.toStringAsFixed(2),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
@@ -343,7 +370,7 @@ class SalesScreen extends StatelessWidget {
             Expanded(
               flex: 3,
               child: Text(
-                item.subtotal.toStringAsFixed(2),
+                subtotal.toStringAsFixed(2),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -355,13 +382,16 @@ class SalesScreen extends StatelessWidget {
   }
 }
 
-class _SummaryBarView extends StatefulWidget {
+class _SummaryBarView extends StatelessWidget {
   final SalesState salesState;
   final Profile profile;
   final bool isExchangeMode;
   final SaleDetailItem? itemToExchange;
   final int? returnQuantity;
   final SaleDetailCubit? saleDetailCubit;
+
+  final String selectedCurrency;
+  final ValueChanged<String> onCurrencyChanged;
 
   const _SummaryBarView({
     required this.salesState,
@@ -370,79 +400,56 @@ class _SummaryBarView extends StatefulWidget {
     this.itemToExchange,
     this.returnQuantity,
     this.saleDetailCubit,
+    required this.selectedCurrency,
+    required this.onCurrencyChanged,
   });
 
   @override
-  State<_SummaryBarView> createState() => __SummaryBarViewState();
-}
-
-class __SummaryBarViewState extends State<_SummaryBarView> {
-  late String _selectedPaymentCurrency;
-
-  @override
-  void initState() {
-    super.initState();
-    
-    _selectedPaymentCurrency = 'USD';
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final salesState = widget.salesState;
-    final profile = widget.profile;
     final converter = CurrencyConverterService(profile);
 
     final List<ExchangeRate> availableRates = [
-      
       const ExchangeRate(id: -1, currencyCode: 'USD', rateToUsd: 1.0),
       ...profile.exchangeRates,
     ];
-    final availableCurrencyCodes = availableRates
-        .map((r) => r.currencyCode)
-        .toSet()
-        .toList();
-
-    if (!availableCurrencyCodes.contains(_selectedPaymentCurrency)) {
-      _selectedPaymentCurrency = 'USD';
+    // Remove duplicates if any
+    final uniqueCodes = <String>{};
+    final uniqueRates = <ExchangeRate>[];
+    for(var rate in availableRates) {
+        if(uniqueCodes.add(rate.currencyCode)) {
+            uniqueRates.add(rate);
+        }
     }
 
     String title = 'الإجمالي';
     String buttonText = 'إتمام البيع';
     double basePriceUsd = salesState.totalPrice;
 
-    if (widget.isExchangeMode) {
-      
-      
+    if (isExchangeMode) {
       title = 'إجمالي السلة الجديدة';
       buttonText = 'إتمام الاستبدال';
     }
 
-    
-    final double displayPrice = converter.convert(
-      basePriceUsd,
-      _selectedPaymentCurrency,
-    );
+    final double displayPrice =
+        converter.convert(basePriceUsd, selectedCurrency);
 
     return Card(
       margin: EdgeInsets.zero,
       elevation: 10,
       child: Padding(
-        padding: const EdgeInsets.all(
-          16.0,
-        ).copyWith(bottom: MediaQuery.of(context).padding.bottom + 16),
+        padding: const EdgeInsets.all(16.0)
+            .copyWith(bottom: MediaQuery.of(context).padding.bottom + 16),
         child: Column(
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedPaymentCurrency,
+              value: selectedCurrency,
               decoration: const InputDecoration(labelText: 'عملة الدفع'),
-              items: availableCurrencyCodes
-                  .map(
-                    (code) => DropdownMenuItem(value: code, child: Text(code)),
-                  )
+              items: uniqueRates
+                  .map((rate) => DropdownMenuItem(value: rate.currencyCode, child: Text(rate.currencyCode)))
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
-                  setState(() => _selectedPaymentCurrency = value);
+                  onCurrencyChanged(value);
                 }
               },
             ),
@@ -452,7 +459,7 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
               children: [
                 Text(title, style: Theme.of(context).textTheme.titleLarge),
                 Text(
-                  '${displayPrice.abs().toStringAsFixed(2)} $_selectedPaymentCurrency',
+                  '${displayPrice.abs().toStringAsFixed(2)} $selectedCurrency',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -465,50 +472,38 @@ class __SummaryBarViewState extends State<_SummaryBarView> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  textStyle:
+                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                onPressed:
-                    salesState.cart.isEmpty ||
+                onPressed: salesState.cart.isEmpty ||
                         salesState.status == SalesStatus.loading
                     ? null
                     : () {
-                        
-                        
-                        final selectedRateObject = availableRates.firstWhere(
-                          (r) => r.currencyCode == _selectedPaymentCurrency,
+                        final selectedRateObject = uniqueRates.firstWhere(
+                          (r) => r.currencyCode == selectedCurrency,
                         );
 
-                        if (widget.isExchangeMode) {
-                          
-                          assert(widget.saleDetailCubit != null);
-
-                          
-                          widget.saleDetailCubit!.exchangeItems(
-                            saleItemIdToReturn:
-                                widget.itemToExchange!.saleItemId,
-                            returnQuantity: widget.returnQuantity!,
+                        if (isExchangeMode) {
+                          assert(saleDetailCubit != null);
+                          saleDetailCubit!.exchangeItems(
+                            saleItemIdToReturn: itemToExchange!.saleItemId,
+                            returnQuantity: returnQuantity!,
                             newItems: salesState.cart,
                             currencyCode: selectedRateObject.currencyCode,
                             rateToUsdAtSale: selectedRateObject.rateToUsd,
                           );
                         } else {
-                          
                           context.read<SalesCubit>().completeSale(
-                            currencyCode: _selectedPaymentCurrency,
-                            rates: availableRates,
+                            currencyCode: selectedCurrency,
+                            rates: uniqueRates,
                           );
                         }
-                        
                       },
                 child: salesState.status == SalesStatus.loading
                     ? const SizedBox(
                         height: 24,
                         width: 24,
-                        child: CircularProgressIndicator(color: Colors.white),
-                      )
+                        child: CircularProgressIndicator(color: Colors.white))
                     : Text(buttonText),
               ),
             ),

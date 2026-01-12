@@ -1,80 +1,79 @@
+import 'dart:async';
+import 'package:hasbni/core/constants/api_constants.dart';
+import 'package:hasbni/core/services/api_services.dart';
+import 'package:hasbni/data/models/user_model.dart'; 
 
-import 'package:supabase_flutter/supabase_flutter.dart';
+enum AuthChangeEvent { signedIn, signedOut }
 
 class AuthRepository {
-  final SupabaseClient _client = Supabase.instance.client;
-
+  final ApiService _api = ApiService();
+  final _authEventController = StreamController<AuthChangeEvent>.broadcast();
   
-  
-  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
-  
+  Stream<AuthChangeEvent> get authEvents => _authEventController.stream;
 
-  User? get currentUser => _client.auth.currentUser;
+  Future<bool> isLoggedIn() async {
+    final token = await _api.getToken();
+    return token != null;
+  }
 
-  Future<void> signInWithEmail({
-    required String email,
-    required String password,
-  }) async {
+  Future<User?> getCurrentUser() async {
     try {
-      print("AuthRepo: Attempting to sign in with email: $email");
-      await _client.auth.signInWithPassword(email: email, password: password);
-      print("✅ AuthRepo: Sign in successful for $email. Waiting for stream...");
-    } on AuthException catch (e) {
-      print("❌ AuthRepo: Sign in failed. Supabase message: ${e.message}");
-      throw Exception('فشل تسجيل الدخول: ${e.message}');
+      final token = await _api.getToken();
+      if (token == null) return null;
+      // Note: Assuming you implemented a /user endpoint or use stored data
+      // For basic flow, we can return a local user if token exists or fetch from API
+      // To strictly follow clean code, add Route::get('/user', ...) in Laravel
+      // For now, return a placeholder or fetch if API ready:
+       try {
+         final data = await _api.get(ApiConstants.user);
+         return User.fromJson(data);
+       } catch (e) {
+         return null;
+       }
     } catch (e) {
-      print("❌ AuthRepo: An unexpected error occurred during sign in: $e");
-      throw Exception('حدث خطأ غير متوقع.');
+      return null;
     }
   }
 
-  Future<void> signUpWithEmail({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      print("AuthRepo: Attempting to sign up with email: $email");
-      await _client.auth.signUp(email: email, password: password);
-      print("✅ AuthRepo: Sign up successful for $email. Waiting for stream...");
-    } on AuthException catch (e) {
-      print("❌ AuthRepo: Sign up failed. Supabase message: ${e.message}");
-      if (e.message.contains('User already registered')) {
-        throw Exception('هذا البريد الإلكتروني مسجل بالفعل.');
-      }
-      throw Exception('فشل إنشاء الحساب: ${e.message}');
-    } catch (e) {
-      print("❌ AuthRepo: An unexpected error occurred during sign up: $e");
-      throw Exception('حدث خطأ غير متوقع.');
-    }
+  Future<void> signInWithEmail({required String email, required String password}) async {
+    final response = await _api.post(ApiConstants.login, {
+      'email': email,
+      'password': password,
+    });
+    await _api.saveToken(response['access_token']);
+    _authEventController.add(AuthChangeEvent.signedIn);
+  }
+
+  Future<void> signUpWithEmail({required String email, required String password}) async {
+    final response = await _api.post(ApiConstants.register, {
+      'email': email,
+      'password': password,
+    });
+    await _api.saveToken(response['access_token']);
+    _authEventController.add(AuthChangeEvent.signedIn);
   }
 
   Future<void> signOut() async {
     try {
-      print("AuthRepo: Attempting to sign out.");
-      await _client.auth.signOut();
-      print("✅ AuthRepo: Sign out successful.");
-    } catch (e) {
-      print("❌ AuthRepo: An unexpected error occurred during sign out: $e");
-      throw Exception('فشل تسجيل الخروج.');
+      await _api.post(ApiConstants.logout, {});
+    } catch (_) {} 
+    finally {
+      await _api.deleteToken();
+      _authEventController.add(AuthChangeEvent.signedOut);
     }
   }
 
   Future<void> setManagerPassword(String password) async {
-    await _client.rpc('set_manager_password', params: {'p_password': password});
+    await _api.post(ApiConstants.setManagerPassword, {'p_password': password});
   }
 
-  
   Future<bool> verifyManagerPassword(String password) async {
-    final result = await _client.rpc(
-      'verify_manager_password',
-      params: {'p_password': password},
-    );
+    final result = await _api.post(ApiConstants.verifyManagerPassword, {'p_password': password});
     return result as bool;
   }
 
-  
   Future<bool> isManagerPasswordSet() async {
-    final result = await _client.rpc('is_manager_password_set');
+    final result = await _api.post(ApiConstants.isManagerPasswordSet, {});
     return result as bool;
   }
 }

@@ -1,15 +1,11 @@
-
 import 'package:equatable/equatable.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:hasbni/data/models/user_model.dart'; 
 
 enum AuthStatus { unknown, loading, authenticated, unauthenticated, failure }
-
 
 class AuthState extends Equatable {
   final AuthStatus status;
   final User? user;
-  
   final String? errorMessage;
 
   const AuthState({

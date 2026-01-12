@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
@@ -39,7 +38,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('إنشاء حساب جديد'),
@@ -48,7 +46,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         leading: BackButton(color: theme.colorScheme.primary),
       ),
       body: Container(
-        
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
@@ -60,6 +57,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
+            // --- FIX START: Handle Success ---
+            if (state.status == AuthStatus.authenticated) {
+              // Registration successful!
+              // Pop all screens until we go back to the root (which AppNavigator will swap to Home)
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }
+            // --- FIX END ---
+
             if (state.status == AuthStatus.failure) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
@@ -77,7 +82,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Container(
-                  
                   padding: const EdgeInsets.all(24.0),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withOpacity(0.8),
@@ -96,7 +100,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        
                         Icon(
                           Icons.person_add_alt_1_outlined,
                           size: 80,

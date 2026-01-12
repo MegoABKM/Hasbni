@@ -1,4 +1,3 @@
-
 import 'package:equatable/equatable.dart';
 
 class ExchangeRate extends Equatable {
@@ -16,19 +15,17 @@ class ExchangeRate extends Equatable {
     return ExchangeRate(
       id: json['id'],
       currencyCode: json['currency_code'],
-      rateToUsd: (json['rate_to_usd'] as num).toDouble(),
+      // FIX: Handle both String and num types safely
+      rateToUsd: double.tryParse(json['rate_to_usd'].toString()) ?? 0.0,
     );
   }
 
   Map<String, dynamic> toJson() {
-    
-    
     return {
       if (id != null) 'id': id,
       'currency_code': currencyCode,
       'rate_to_usd': rateToUsd,
     };
-    
   }
 
   @override

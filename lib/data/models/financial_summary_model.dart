@@ -1,4 +1,3 @@
-
 import 'package:equatable/equatable.dart';
 
 class FinancialSummary extends Equatable {
@@ -19,17 +18,19 @@ class FinancialSummary extends Equatable {
   });
 
   factory FinancialSummary.fromJson(Map<String, dynamic> json) {
+    // Helper to safely parse any field
+    double toDouble(dynamic val) => double.tryParse(val.toString()) ?? 0.0;
+
     return FinancialSummary(
-      totalRevenue: (json['total_revenue'] as num).toDouble(),
-      totalProfit: (json['total_profit'] as num).toDouble(),
-      totalExpenses: (json['total_expenses'] as num).toDouble(),
-      totalWithdrawals: (json['total_withdrawals'] as num).toDouble(),
-      netProfit: (json['net_profit'] as num).toDouble(),
-      inventoryValue: (json['inventory_value'] as num).toDouble(),
+      totalRevenue: toDouble(json['total_revenue']),
+      totalProfit: toDouble(json['total_profit']),
+      totalExpenses: toDouble(json['total_expenses']),
+      totalWithdrawals: toDouble(json['total_withdrawals']),
+      netProfit: toDouble(json['net_profit']),
+      inventoryValue: toDouble(json['inventory_value']),
     );
   }
 
-  
   factory FinancialSummary.empty() {
     return const FinancialSummary(
       totalRevenue: 0,

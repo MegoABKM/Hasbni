@@ -1,3 +1,4 @@
+// lib/routes/app_router.dart
 
 import 'package:flutter/material.dart';
 import 'package:hasbni/presentation/screens/inventory/add_edit_product_screen.dart';
@@ -12,6 +13,7 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case inventory:
+        // No BlocProvider needed here anymore
         return MaterialPageRoute(builder: (_) => const InventoryScreen());
       case addEditProduct:
         return MaterialPageRoute(builder: (_) => const AddEditProductScreen());

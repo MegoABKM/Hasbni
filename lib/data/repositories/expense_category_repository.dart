@@ -1,24 +1,21 @@
-
+import 'package:hasbni/core/constants/api_constants.dart';
+import 'package:hasbni/core/services/api_services.dart';
 import 'package:hasbni/data/models/expense_category_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ExpenseCategoryRepository {
-  final SupabaseClient _client = Supabase.instance.client;
-  final String _tableName = 'expense_categories';
+  final ApiService _api = ApiService();
 
   Future<List<ExpenseCategory>> getCategories() async {
-    final data = await _client.from(_tableName).select().order('name');
+    final List data = await _api.get(ApiConstants.expenseCategories);
     return data.map((item) => ExpenseCategory.fromJson(item)).toList();
   }
 
   Future<ExpenseCategory> addCategory(String name) async {
-    final response = await _client.from(_tableName).insert({
-      'name': name,
-    }).select();
-    return ExpenseCategory.fromJson(response.first);
+    final response = await _api.post(ApiConstants.expenseCategories, {'name': name});
+    return ExpenseCategory.fromJson(response);
   }
 
   Future<void> deleteCategory(int id) async {
-    await _client.from(_tableName).delete().eq('id', id);
+    await _api.delete('${ApiConstants.expenseCategories}/$id');
   }
 }

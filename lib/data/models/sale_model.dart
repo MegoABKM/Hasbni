@@ -1,7 +1,5 @@
-
 import 'package:equatable/equatable.dart';
 import 'package:hasbni/data/models/product_model.dart';
-
 
 class SaleItem extends Equatable {
   final Product product;
@@ -30,6 +28,7 @@ class Sale extends Equatable {
   final double totalPrice;
   final DateTime createdAt;
   final String currencyCode;
+  
   const Sale({
     required this.id,
     required this.totalPrice,
@@ -40,8 +39,9 @@ class Sale extends Equatable {
   factory Sale.fromJson(Map<String, dynamic> json) {
     return Sale(
       id: json['id'],
-      totalPrice: (json['total_price'] as num).toDouble(),
-      currencyCode: json['currency_code'],
+      // FIX: Safely parse decimal string to double
+      totalPrice: double.tryParse(json['total_price'].toString()) ?? 0.0,
+      currencyCode: json['currency_code'] ?? 'USD',
       createdAt: DateTime.parse(json['created_at']),
     );
   }

@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/services/sound_service.dart';
@@ -7,9 +5,6 @@ import 'package:hasbni/data/models/product_model.dart';
 import 'package:hasbni/presentation/cubits/inventory/inventory_cubit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-
-
-
 
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
@@ -28,7 +23,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _sellingPriceController;
 
   bool get _isEditing => widget.product != null;
-
+ bool _isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -58,38 +53,47 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     }
   }
 
-  void _submitForm() {
+   void _submitForm() async { // Make async
     if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true); // Disable button
+
       final productData = {
         'name': _nameController.text,
-        'barcode': _barcodeController.text.isEmpty
-            ? null
-            : _barcodeController.text,
+        'barcode': _barcodeController.text.isEmpty ? null : _barcodeController.text,
         'quantity': int.parse(_quantityController.text),
         'cost_price': double.parse(_costPriceController.text),
         'selling_price': double.parse(_sellingPriceController.text),
       };
 
-      if (_isEditing) {
-        context.read<InventoryCubit>().updateProduct(
-          widget.product!.id,
-          productData,
-        );
-      } else {
-        context.read<InventoryCubit>().addProduct(productData);
-      }
+      try {
+        if (_isEditing) {
+          // Use localId for updates
+          await context.read<InventoryCubit>().updateProduct(
+                widget.product!.localId!,
+                productData,
+              );
+        } else {
+          // Await the add operation
+          await context.read<InventoryCubit>().addProduct(productData);
+        }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isEditing ? 'جاري تعديل المنتج...' : 'جاري حفظ المنتج...',
-          ),
-        ),
-      );
-      Navigator.pop(context);
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم الحفظ بنجاح'), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context); // Close screen AFTER save
+        
+      } catch (e) {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('حدث خطأ: $e'), backgroundColor: Colors.red),
+           );
+           setState(() => _isLoading = false);
+        }
+      }
     }
   }
-
   @override
   void dispose() {
     _barcodeController.dispose();
@@ -146,7 +150,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     child: TextFormField(
                       controller: _costPriceController,
                       decoration: const InputDecoration(
-                        labelText: 'سعر التكلفة',
+                        labelText: 'سعر التكلفة (USD)', // Explicit Label
+                        suffixText: '\$', // Dollar sign
+                        hintText: 'مثلاً: 10.5',
                       ),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -160,7 +166,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _sellingPriceController,
-                decoration: const InputDecoration(labelText: 'سعر البيع'),
+                decoration: const InputDecoration(
+                  labelText: 'سعر البيع (USD)', // Explicit Label
+                  suffixText: '\$', // Dollar sign
+                  hintText: 'مثلاً: 15.0',
+                ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -168,7 +178,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
-                onPressed: _submitForm,
+                 onPressed: _isLoading ? null : _submitForm,
                 icon: const Icon(Icons.save),
                 label: Text(_isEditing ? 'حفظ التعديلات' : 'حفظ المنتج'),
                 style: ElevatedButton.styleFrom(
@@ -183,9 +193,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 }
 
-
-
-
+// ... BarcodeScannerScreen class remains the same ...
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
 

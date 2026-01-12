@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:hasbni/core/services/sync_service.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
+import 'package:hasbni/presentation/cubits/inventory/inventory_cubit.dart';
 import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';
 import 'package:hasbni/presentation/cubits/profile/profile_state.dart';
 import 'package:hasbni/presentation/screens/employees/employee_management_screen.dart';
@@ -14,71 +15,80 @@ import 'package:hasbni/presentation/screens/sales/sales_history_screen.dart';
 import 'package:hasbni/presentation/screens/settings/settings_screen.dart';
 import 'package:hasbni/presentation/screens/withdrawals/withdrawals_screen.dart';
 import 'package:hasbni/presentation/widgets/home_list_item_widget.dart';
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ProfileCubit()..loadProfile(),
-      child: BlocBuilder<ProfileCubit, ProfileState>(
-        builder: (context, state) {
-          
-          final String shopName =
-              state.profile?.shopName != null &&
-                  state.profile!.shopName.isNotEmpty
-              ? state.profile!.shopName
-              : 'لوحة التحكم';
+    // REMOVED BlocProvider here. We use the global one from main.dart
+    return BlocBuilder<ProfileCubit, ProfileState>(
+      builder: (context, state) {
+        final String shopName = state.profile?.shopName != null &&
+                state.profile!.shopName.isNotEmpty
+            ? state.profile!.shopName
+            : 'لوحة التحكم';
 
-          return Scaffold(
-            
-            appBar: AppBar(
-              title: Text(
-                shopName,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              shopName,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.secondary,
               ),
-              actions: [
-                
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  tooltip: 'الإعدادات',
-                  onPressed: () {
-                    
-                    if (state.profile != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BlocProvider.value(
-                            value: context.read<ProfileCubit>(),
-                            child: const SettingsScreen(),
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                
-                IconButton(
-                  icon: const Icon(Icons.logout_outlined),
-                  tooltip: 'تسجيل الخروج',
-                  onPressed: () {
-                    context.read<AuthCubit>().signOut();
-                  },
-                ),
-              ],
             ),
-            body: _buildBody(context, state),
-          );
-        },
-      ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: 'الإعدادات',
+                onPressed: () {
+                  // Removed BlocProvider.value here, SettingsScreen can find ProfileCubit globally
+                   if (state.profile != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SettingsScreen(), // CLEANER
+                      ),
+                    );
+                  }
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout_outlined),
+                tooltip: 'تسجيل الخروج',
+                onPressed: () {
+                  context.read<AuthCubit>().signOut();
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.sync),
+                tooltip: 'مزامنة البيانات',
+                onPressed: () async {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('جاري المزامنة...')),
+                  );
+
+                  await SyncService().syncEverything();
+
+                  // THIS WILL NOW WORK because InventoryCubit is in main.dart
+                  if (context.mounted) {
+                    context.read<InventoryCubit>().loadProducts(isRefresh: true);
+                    context.read<ProfileCubit>().loadProfile(); // Refresh profile too
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تمت المزامنة بنجاح')),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+          body: _buildBody(context, state),
+        );
+      },
     );
   }
 
-  
   Widget _buildBody(BuildContext context, ProfileState state) {
     if (state.status == ProfileStatus.loading ||
         state.status == ProfileStatus.initial) {
@@ -99,14 +109,13 @@ class HomeScreen extends StatelessWidget {
         ),
       );
     }
-    
+
     return _buildMenuList(context);
   }
 
   Widget _buildMenuList(BuildContext context) {
     final theme = Theme.of(context);
 
-    
     final List<Map<String, dynamic>> dailyOps = [
       {
         'title': 'نقطة البيع',
@@ -114,9 +123,9 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.point_of_sale_outlined,
         'color': theme.colorScheme.primary,
         'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const OperationsHubScreen()),
-        ),
+              context,
+              MaterialPageRoute(builder: (_) => const OperationsHubScreen()),
+            ),
       },
       {
         'title': 'المخزون',
@@ -124,9 +133,15 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.inventory_2_outlined,
         'color': Colors.orangeAccent,
         'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const InventoryScreen()),
-        ),
+              context,
+              MaterialPageRoute(
+                // FIX: Wrap InventoryScreen with the existing ProfileCubit
+                builder: (_) => BlocProvider.value(
+                  value: context.read<ProfileCubit>(),
+                  child: const InventoryScreen(),
+                ),
+              ),
+            ),
       },
     ];
 
@@ -137,9 +152,9 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.bar_chart_outlined,
         'color': Colors.greenAccent,
         'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ReportsScreen()),
-        ),
+              context,
+              MaterialPageRoute(builder: (_) => const ReportsScreen()),
+            ),
       },
       {
         'title': 'سجل الفواتير',
@@ -147,9 +162,9 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.receipt_long_outlined,
         'color': Colors.purpleAccent,
         'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SalesHistoryScreen()),
-        ),
+              context,
+              MaterialPageRoute(builder: (_) => const SalesHistoryScreen()),
+            ),
       },
       {
         'title': 'المصروفات',
@@ -157,9 +172,9 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.money_off_csred_outlined,
         'color': Colors.redAccent,
         'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ExpensesScreen()),
-        ),
+              context,
+              MaterialPageRoute(builder: (_) => const ExpensesScreen()),
+            ),
       },
       {
         'title': 'المسحوبات الشخصية',
@@ -167,9 +182,9 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.person_remove_outlined,
         'color': Colors.cyan,
         'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const WithdrawalsScreen()),
-        ),
+              context,
+              MaterialPageRoute(builder: (_) => const WithdrawalsScreen()),
+            ),
       },
     ];
 
@@ -180,9 +195,10 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.people_alt_outlined,
         'color': Colors.indigoAccent,
         'onTap': () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const EmployeeManagementScreen()),
-        ),
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const EmployeeManagementScreen()),
+            ),
       },
     ];
 
@@ -203,7 +219,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  
   List<Widget> _buildAnimatedList(List<Map<String, dynamic>> items) {
     return AnimationConfiguration.toStaggeredList(
       duration: const Duration(milliseconds: 375),
@@ -225,7 +240,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0, right: 8.0, top: 8.0),

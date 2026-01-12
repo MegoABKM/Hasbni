@@ -1,4 +1,3 @@
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
 import 'package:hasbni/data/repositories/auth_repository.dart';
@@ -8,7 +7,8 @@ import 'profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileRepository _profileRepository;
-  final ExchangeRateRepository _exchangeRateRepository;
+  // ignore: unused_field
+  final ExchangeRateRepository _exchangeRateRepository; 
   final AuthRepository _authRepository; 
 
   ProfileCubit()
@@ -18,7 +18,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       super(const ProfileState());
 
   Future<void> loadProfile() async {
-    
+    // Only show loading if we don't have data yet
     if (state.profile == null) {
       emit(state.copyWith(status: ProfileStatus.loading));
     }
@@ -28,7 +28,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         state.copyWith(
           status: ProfileStatus.success,
           profile: () => profile,
-          
           errorMessage: null,
           successMessage: null,
         ),
@@ -43,22 +42,28 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  
-  
   Future<void> saveSettings({
     required Map<String, dynamic> profileData,
     required List<ExchangeRate> rates,
   }) async {
     emit(state.copyWith(status: ProfileStatus.loading));
     try {
+      // --- FIX START ---
+      // We must merge the rates into the profileData so Laravel receives them 
+      // in the $request->exchange_rates array.
       
-      await _profileRepository.upsertProfile(profileData);
-      await _exchangeRateRepository.upsertExchangeRates(rates);
+      final Map<String, dynamic> combinedData = Map.from(profileData);
+      
+      // Convert the list of ExchangeRate objects to a List of JSON Maps
+      combinedData['exchange_rates'] = rates.map((r) => r.toJson()).toList();
 
-      
+      // Send everything to the /profiles endpoint
+      await _profileRepository.upsertProfile(combinedData);
+      // --- FIX END ---
+
+      // Refresh the profile to get the updated data from server
       final updatedProfile = await _profileRepository.getCurrentUserProfile();
 
-      
       emit(
         state.copyWith(
           status: ProfileStatus.success,
@@ -67,7 +72,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         ),
       );
     } catch (e) {
-      
       emit(
         state.copyWith(
           status: ProfileStatus.failure,
@@ -96,9 +100,4 @@ class ProfileCubit extends Cubit<ProfileState> {
       );
     }
   }
-  
-
-  
-  
-  
 }

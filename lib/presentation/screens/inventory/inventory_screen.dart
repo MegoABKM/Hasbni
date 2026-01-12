@@ -1,10 +1,11 @@
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hasbni/core/services/currency_converter_service.dart';
 import 'package:hasbni/data/models/product_model.dart';
 import 'package:hasbni/presentation/cubits/inventory/inventory_cubit.dart';
 import 'package:hasbni/presentation/cubits/inventory/inventory_state.dart';
+import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';
 import 'package:hasbni/presentation/screens/inventory/add_edit_product_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -13,16 +14,20 @@ class InventoryScreen extends StatefulWidget {
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
 }
-
 class _InventoryScreenState extends State<InventoryScreen> {
   final _scrollController = ScrollController();
   Timer? _debounce;
-  late InventoryCubit _inventoryCubit;
+  
+  // REMOVED: late InventoryCubit _inventoryCubit; 
+  // We will use context.read<InventoryCubit>()
+
+  String _selectedDisplayCurrency = 'USD';
 
   @override
   void initState() {
     super.initState();
-    _inventoryCubit = InventoryCubit()..loadProducts();
+    // Load initial data using the global cubit
+    context.read<InventoryCubit>().loadProducts(isRefresh: true);
     _scrollController.addListener(_onScroll);
   }
 
@@ -31,33 +36,33 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _debounce?.cancel();
-    _inventoryCubit.close();
+    // REMOVED: _inventoryCubit.close(); // Do not close global cubit!
     super.dispose();
   }
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 300) {
-      _inventoryCubit.loadProducts();
+      context.read<InventoryCubit>().loadProducts();
     }
   }
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      _inventoryCubit.searchProducts(query);
+      context.read<InventoryCubit>().searchProducts(query);
     });
   }
 
   Future<void> _navigateAndRefresh(Widget screen) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-            BlocProvider.value(value: _inventoryCubit, child: screen),
-      ),
+      MaterialPageRoute(builder: (_) => screen), // Just push screen
     );
-    _inventoryCubit.refresh();
+    // Refresh global cubit when returning
+    if (mounted) {
+       context.read<InventoryCubit>().refresh(); 
+    }
   }
 
   void _deleteProduct(Product product) {
@@ -73,7 +78,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
           TextButton(
             onPressed: () {
-              _inventoryCubit.deleteProduct(product.id);
+              // FIX: Use localId!
+              context.read<InventoryCubit>().deleteProduct(product.localId!);
               Navigator.of(confirmCtx).pop();
             },
             child: const Text('حذف', style: TextStyle(color: Colors.red)),
@@ -85,12 +91,41 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _inventoryCubit,
-      child: Scaffold(
+    // 1. Get Profile to build currency list
+    final profile = context.watch<ProfileCubit>().state.profile;
+    final List<String> currencies = ['USD'];
+    if (profile != null) {
+      for (var rate in profile.exchangeRates) {
+        if (rate.rateToUsd > 0) {
+          currencies.add(rate.currencyCode);
+        }
+      }
+    }
+
+    // Ensure selected currency still exists
+    if (!currencies.contains(_selectedDisplayCurrency)) {
+      _selectedDisplayCurrency = 'USD';
+    }
+ return Scaffold(
         appBar: AppBar(
           title: const Text('المخزن'),
           actions: [
+            // 2. Dropdown to select currency
+            DropdownButton<String>(
+              value: _selectedDisplayCurrency,
+              dropdownColor: Theme.of(context).cardColor,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.monetization_on_outlined),
+              items: currencies.map((c) {
+                return DropdownMenuItem(value: c, child: Text(c));
+              }).toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _selectedDisplayCurrency = val);
+                }
+              },
+            ),
+            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () =>
@@ -117,45 +152,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             );
           },
-        ),
-      ),
-    );
+        ));
+      
+    
   }
-
-  
-  
-  
-  
-  
-
-  
-  
-  
-  
-  
-  
-  
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
 
   Widget _buildBody(BuildContext context, InventoryState state) {
     if (state.status == InventoryStatus.loading && state.products.isEmpty) {
@@ -169,7 +169,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             Text(state.errorMessage ?? 'حدث خطأ'),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: () => _inventoryCubit.refresh(),
+              onPressed: () => context.read<InventoryCubit>().refresh(),
               child: const Text('إعادة المحاولة'),
             ),
           ],
@@ -184,8 +184,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Widget _buildDataTable(BuildContext context, InventoryState state) {
+    // 3. Init Converter
+    final profile = context.read<ProfileCubit>().state.profile;
+    final converter = CurrencyConverterService(profile);
+
     return RefreshIndicator(
-      onRefresh: () => _inventoryCubit.refresh(),
+      onRefresh: () => context.read<InventoryCubit>().refresh(),
       child: SingleChildScrollView(
         controller: _scrollController,
         scrollDirection: Axis.vertical,
@@ -193,14 +197,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             showCheckboxColumn: false,
-            columns: const [
-              DataColumn(label: Text('الصنف')),
-              DataColumn(label: Text('الكمية'), numeric: true),
-              DataColumn(label: Text('سعر البيع'), numeric: true),
-              DataColumn(label: Text('إجراءات')),
+            columns: [
+              const DataColumn(label: Text('الصنف')),
+              const DataColumn(label: Text('الكمية'), numeric: true),
+              // 4. Dynamic Header
+              DataColumn(
+                label: Text('سعر البيع ($_selectedDisplayCurrency)'),
+                numeric: true,
+              ),
+              const DataColumn(label: Text('إجراءات')),
             ],
             rows: [
               ...state.products.map((product) {
+                // 5. Convert Price on the fly
+                final displayPrice = converter.convert(
+                  product.sellingPrice,
+                  _selectedDisplayCurrency,
+                );
+
                 return DataRow(
                   onSelectChanged: (selected) {
                     if (selected ?? false) _showProductDetailsDialog(product);
@@ -209,7 +223,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     DataCell(Text(product.name)),
                     DataCell(Text(product.quantity.toString())),
                     DataCell(
-                      Text('${product.sellingPrice.toStringAsFixed(2)}'),
+                      Text(displayPrice.toStringAsFixed(2)),
                     ),
                     DataCell(_buildActionButtons(product)),
                   ],
@@ -244,8 +258,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             const Divider(),
             Text('الكمية المتاحة: ${product.quantity}'),
             const Divider(),
-            Text('سعر التكلفة: ${product.costPrice.toStringAsFixed(2)}'),
-            Text('سعر البيع: ${product.sellingPrice.toStringAsFixed(2)}'),
+            Text('سعر التكلفة: \$${product.costPrice.toStringAsFixed(2)}'),
+            Text('سعر البيع: \$${product.sellingPrice.toStringAsFixed(2)}'),
             const Divider(),
             Text(
               'تاريخ الإضافة: ${DateFormat('yyyy-MM-dd', 'ar').format(product.createdAt)}',
@@ -329,13 +343,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
             )
           : null,
       label: Text(label),
-      onPressed: () => _inventoryCubit.changeSort(sortBy: sortBy),
+      onPressed: () => context.read<InventoryCubit>().changeSort(sortBy: sortBy),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
         side: BorderSide(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Colors.grey,
+          color:
+              isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
         ),
       ),
       backgroundColor: isSelected

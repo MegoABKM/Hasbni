@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
@@ -39,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       body: Container(
-        
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [theme.scaffoldBackgroundColor, theme.colorScheme.surface],
@@ -49,6 +47,14 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
+             // --- FIX START ---
+            if (state.status == AuthStatus.authenticated) {
+               // Usually AppNavigator handles this, but popping helps ensure
+               // we don't have a login screen stuck on top if pushed weirdly
+               // or if context allows
+            }
+            // --- FIX END ---
+
             if (state.status == AuthStatus.failure) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
@@ -66,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Container(
-                  
                   padding: const EdgeInsets.all(24.0),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withOpacity(0.8),
@@ -85,11 +90,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        
                         Icon(
                           Icons.storefront_outlined,
                           size: 80,
                           color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(height: 16),
+                            Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.amber),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Colors.amber),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'تنبيه: يجب توفر الإنترنت عند تسجيل الدخول لأول مرة فقط لتحميل البيانات.',
+                                  style: TextStyle(
+                                    color: Colors.amber[100],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(

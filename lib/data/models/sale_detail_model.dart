@@ -1,4 +1,3 @@
-
 import 'package:equatable/equatable.dart';
 
 class SaleDetailItem extends Equatable {
@@ -22,12 +21,13 @@ class SaleDetailItem extends Equatable {
 
   factory SaleDetailItem.fromJson(Map<String, dynamic> json) {
     return SaleDetailItem(
-      saleItemId: json['sale_item_id'],
-      productId: json['product_id'],
-      productName: json['product_name'],
-      quantitySold: json['quantity_sold'],
-      returnedQuantity: json['returned_quantity'],
-      priceAtSale: (json['price_at_sale'] as num).toDouble(),
+      saleItemId: json['id'], // Note: standard Laravel is 'id', check your response
+      productId: json['product_id'] ?? 0,
+      productName: json['product_name_snapshot'] ?? json['product_name'] ?? 'Unknown',
+      quantitySold: int.tryParse(json['quantity_sold'].toString()) ?? 0,
+      returnedQuantity: int.tryParse(json['returned_quantity'].toString()) ?? 0,
+      // FIX: Safely parse decimal string
+      priceAtSale: double.tryParse(json['price_at_sale'].toString()) ?? 0.0,
     );
   }
   @override
@@ -58,7 +58,8 @@ class SaleDetail extends Equatable {
     }
     return SaleDetail(
       id: json['id'],
-      totalPrice: (json['total_price'] as num).toDouble(),
+      // FIX: Safely parse decimal string
+      totalPrice: double.tryParse(json['total_price'].toString()) ?? 0.0,
       currencyCode: json['currency_code'] ?? 'USD', 
       createdAt: DateTime.parse(json['created_at']),
       items: itemsList,

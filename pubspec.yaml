@@ -16,7 +16,8 @@ dependencies:
   equatable: 2.0.5
   google_fonts: 6.1.0
   mobile_scanner: 4.0.1
-  supabase_flutter: ^2.9.1
+  http: ^1.2.0
+  flutter_secure_storage: ^9.0.0
   just_audio: ^0.9.36
   image_picker: ^1.1.2
   audio_session: ^0.1.25
@@ -25,7 +26,9 @@ dependencies:
   pdf: ^3.11.3
   shared_preferences: ^2.5.3
   flutter_staggered_animations: ^1.1.1
-  
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  connectivity_plus: ^6.0.3
 # It's better practice to move build tools to dev_dependencies
 # but leaving it here as it was in your original file.
 
@@ -41,7 +44,7 @@ dev_dependencies:
 flutter_launcher_icons:
   # The path to your high-resolution source icon.
   # Assuming your logo is in 'assets/images/'. Change this if it's different.
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/logo.webp"
 
   # Android specific settings
   android: true

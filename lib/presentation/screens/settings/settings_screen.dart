@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
@@ -6,15 +5,12 @@ import 'package:hasbni/data/models/profile_model.dart';
 import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';
 import 'package:hasbni/presentation/cubits/profile/profile_state.dart';
 
-
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProfileCubit, ProfileState>(
-      
-      
       listenWhen: (previous, current) =>
           previous.successMessage != current.successMessage ||
           previous.errorMessage != current.errorMessage,
@@ -37,14 +33,32 @@ class SettingsScreen extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        
-        if (state.profile == null && state.status == ProfileStatus.loading) {
+        if (state.status == ProfileStatus.loading) {
           return Scaffold(
             appBar: AppBar(title: const Text('الإعدادات')),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-        
+
+        // Only show this if we really failed to load anything
+        if (state.status == ProfileStatus.failure && state.profile == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('الإعدادات')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("فشل تحميل الإعدادات"),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                      onPressed: () => context.read<ProfileCubit>().loadProfile(),
+                      child: const Text("إعادة المحاولة"))
+                ],
+              ),
+            ),
+          );
+        }
+
         return SettingsView(
           profile: state.profile,
           isLoading: state.status == ProfileStatus.loading,
@@ -53,7 +67,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
-
 
 class SettingsView extends StatefulWidget {
   final Profile? profile;
@@ -67,16 +80,13 @@ class SettingsView extends StatefulWidget {
 class _SettingsViewState extends State<SettingsView> {
   final _formKey = GlobalKey<FormState>();
 
-  
   late TextEditingController _shopNameController;
   late TextEditingController _addressController;
   late TextEditingController _phoneController;
 
-  
   late TextEditingController _managerPasswordController;
   late TextEditingController _confirmManagerPasswordController;
 
-  
   final List<String> _availableCurrencies = [
     'LYD',
     'USD',
@@ -91,7 +101,7 @@ class _SettingsViewState extends State<SettingsView> {
   void initState() {
     super.initState();
     _initializeControllers();
-    
+
     _managerPasswordController = TextEditingController();
     _confirmManagerPasswordController = TextEditingController();
   }
@@ -99,7 +109,7 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   void didUpdateWidget(covariant SettingsView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.profile != oldWidget.profile) {
       _initializeControllers();
     }
@@ -119,18 +129,17 @@ class _SettingsViewState extends State<SettingsView> {
     _rateControllers = {
       for (var code in _availableCurrencies)
         code: TextEditingController(
-          text:
-              (widget.profile?.exchangeRates
-                          .firstWhere(
-                            (r) => r.currencyCode == code,
-                            orElse: () => ExchangeRate(
-                              currencyCode: code,
-                              rateToUsd: 0.0,
-                            ),
-                          )
-                          .rateToUsd ??
-                      0.0)
-                  .toString(),
+          text: (widget.profile?.exchangeRates
+                      .firstWhere(
+                        (r) => r.currencyCode == code,
+                        orElse: () => ExchangeRate(
+                          currencyCode: code,
+                          rateToUsd: 0.0,
+                        ),
+                      )
+                      .rateToUsd ??
+                  0.0)
+              .toString(),
         ),
     };
   }
@@ -152,15 +161,19 @@ class _SettingsViewState extends State<SettingsView> {
       final profileCubit = context.read<ProfileCubit>();
       final newPassword = _managerPasswordController.text;
 
-      
+      // 1. Set Password
       if (newPassword.isNotEmpty) {
         await profileCubit.setManagerPassword(newPassword);
+        
+        // --- FIX: Check mounted before using controllers ---
+        if (!mounted) return; 
+        
         _managerPasswordController.clear();
         _confirmManagerPasswordController.clear();
-        FocusScope.of(context).unfocus(); 
+        FocusScope.of(context).unfocus();
       }
 
-      
+      // 2. Prepare Rates
       final existingRates = widget.profile?.exchangeRates ?? [];
       final ratesToUpdate = <ExchangeRate>[];
       _rateControllers.forEach((code, controller) {
@@ -187,6 +200,7 @@ class _SettingsViewState extends State<SettingsView> {
         'phone_number': _phoneController.text.trim(),
       };
 
+      // 3. Save Settings
       await profileCubit.saveSettings(
         profileData: profileData,
         rates: ratesToUpdate,
@@ -226,7 +240,6 @@ class _SettingsViewState extends State<SettingsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                
                 Text(
                   'بيانات المتجر',
                   style: Theme.of(context).textTheme.titleLarge,
@@ -258,8 +271,6 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   keyboardType: TextInputType.phone,
                 ),
-
-                
                 const Divider(height: 48),
                 Text(
                   'أمان المدير',
@@ -282,7 +293,7 @@ class _SettingsViewState extends State<SettingsView> {
                     if (value != null && value.isNotEmpty && value.length < 4) {
                       return 'كلمة المرور يجب أن تكون 4 أحرف على الأقل';
                     }
-                    
+
                     if (_confirmManagerPasswordController.text.isNotEmpty &&
                         (value == null || value.isEmpty)) {
                       return 'الرجاء إدخال كلمة المرور هنا أيضاً';
@@ -305,8 +316,6 @@ class _SettingsViewState extends State<SettingsView> {
                     return null;
                   },
                 ),
-
-                
                 const Divider(height: 48),
                 Text(
                   'أسعار الصرف',
