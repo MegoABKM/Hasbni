@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/services/sync_service.dart';
 import 'package:hasbni/data/repositories/auth_repository.dart';
+import 'package:hasbni/data/models/user_model.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -30,6 +31,19 @@ class AuthCubit extends Cubit<AuthState> {
     } else {
       emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
+  }
+
+  // --- NEW: Guest Mode ---
+  void enterGuestMode() {
+    // Create a dummy user for offline testing
+    const guestUser = User(
+      id: 0, 
+      email: 'guest@offline.app', 
+      name: 'Guest User'
+    );
+    
+    // Force the state to authenticated
+    emit(state.copyWith(status: AuthStatus.authenticated, user: guestUser));
   }
 
   Future<void> signIn(String email, String password) async {

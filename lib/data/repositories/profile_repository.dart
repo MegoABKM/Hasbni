@@ -22,7 +22,23 @@ class ProfileRepository {
     } catch (e) {
       print("⚠️ Offline Mode: Fetching profile locally... ($e)");
       // 3. Fallback to Local DB
-      return await _getLocalProfile();
+      final localProfile = await _getLocalProfile();
+      
+      if (localProfile != null) {
+        return localProfile;
+      } else {
+        // 4. Default Profile for Guest/Fresh Install
+        print("⚠️ No local profile found. Returning default Guest Profile.");
+        return const Profile(
+          id: 0,
+          shopName: 'متجر تجريبي',
+          address: 'وضع غير متصل',
+          phoneNumber: '',
+          city: '',
+          exchangeRates: [], // Empty list implies only USD
+          hasManagerPassword: false,
+        );
+      }
     }
   }
 

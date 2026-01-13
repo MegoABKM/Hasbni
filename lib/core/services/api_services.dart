@@ -9,7 +9,7 @@ import 'package:hasbni/core/services/network_service.dart'; // Import NetworkSer
 class ApiService {
   final _storage = const FlutterSecureStorage();
   final _network = NetworkService();
-  
+
   // Timeout duration: If server doesn't reply in 5 seconds, go offline.
   static const Duration _timeout = Duration(seconds: 10);
 
@@ -35,12 +35,14 @@ class ApiService {
   }
 
   /// The "Smart" Request Handler
-  Future<dynamic> _performRequest(Future<http.Response> Function() request) async {
+  Future<dynamic> _performRequest(
+      Future<http.Response> Function() request) async {
     // 1. Check Internet Connection First
     bool connected = await _network.isConnected;
     if (!connected) {
       print("⚠️ No Internet Connection. Switching to Offline Mode.");
-      throw SocketException('No Internet'); // This triggers the Repository catch block
+      throw SocketException(
+          'No Internet'); // This triggers the Repository catch block
     }
 
     try {

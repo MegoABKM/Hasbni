@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -11,7 +10,6 @@ import 'package:hasbni/presentation/cubits/session/session_cubit.dart';
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
-  
   void _showManagerPasswordDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -118,11 +116,7 @@ class RoleSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    
-    
     return Scaffold(
-      
-      
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -130,7 +124,6 @@ class RoleSelectionScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                
                 Icon(
                   Icons.how_to_reg_outlined,
                   size: 80,
@@ -151,8 +144,6 @@ class RoleSelectionScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 48),
-
-                
                 AnimationLimiter(
                   child: Column(
                     children: AnimationConfiguration.toStaggeredList(
@@ -179,7 +170,6 @@ class RoleSelectionScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const Spacer(),
                 TextButton.icon(
                   icon: const Icon(Icons.logout, size: 18),
@@ -197,7 +187,6 @@ class RoleSelectionScreen extends StatelessWidget {
     );
   }
 }
-
 
 class _RoleSelectionCard extends StatelessWidget {
   final IconData icon;
@@ -260,7 +249,6 @@ class _RoleSelectionCard extends StatelessWidget {
   }
 }
 
-
 class _ManagerPasswordDialog extends StatefulWidget {
   const _ManagerPasswordDialog();
 
@@ -274,20 +262,53 @@ class _ManagerPasswordDialogState extends State<_ManagerPasswordDialog> {
   bool _isLoading = true;
   bool _isPasswordSet = false;
   String? _errorText;
+  bool _isGuestMode = false;
 
   @override
   void initState() {
     super.initState();
-    _checkIfPasswordIsSet();
+    // Do NOT call _checkIfPasswordIsSet here directly anymore.
+    // We defer it to didChangeDependencies to ensure we have context access
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkContextAndInit();
+  }
+
+  Future<void> _checkContextAndInit() async {
+    // 1. Check if we are in Guest Mode
+    final authState = context.read<AuthCubit>().state;
+
+    // IMPORTANT: Check if the user ID is 0 (Guest Mode ID)
+    if (authState.user != null && authState.user!.id == 0) {
+      if (mounted) {
+        setState(() {
+          _isGuestMode = true;
+          _isLoading = false;
+          _isPasswordSet = false; // Guests don't have passwords
+        });
+      }
+      return; // STOP HERE! Do not proceed to server check.
+    }
+
+    // 2. Normal Online Mode - Only run if NOT guest mode
+    if (!_isGuestMode && _isLoading) {
+       await _checkIfPasswordIsSet();
+    }
   }
 
   Future<void> _checkIfPasswordIsSet() async {
+    // If we are already in guest mode, abort
+    if(_isGuestMode) return;
+
     if (!mounted) return;
-    setState(() => _isLoading = true);
     try {
       final result = await _authRepo.isManagerPasswordSet();
       if (mounted) setState(() => _isPasswordSet = result);
     } catch (e) {
+      // If offline in normal mode, we can't verify password setting.
       if (mounted) setState(() => _errorText = 'فشل الاتصال بالخادم.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -295,8 +316,17 @@ class _ManagerPasswordDialogState extends State<_ManagerPasswordDialog> {
   }
 
   Future<void> _handleManagerLogin() async {
-    if (_isLoading) return;
     final sessionCubit = context.read<SessionCubit>();
+
+    // --- NEW: Immediate success for Guest Mode ---
+    if (_isGuestMode) {
+      await sessionCubit.setManagerRole();
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+    // ---------------------------------------------
+
+    if (_isLoading) return;
 
     if (!_isPasswordSet) {
       await sessionCubit.setManagerRole();
@@ -345,7 +375,9 @@ class _ManagerPasswordDialogState extends State<_ManagerPasswordDialog> {
         content: Center(child: CircularProgressIndicator()),
       );
     }
-    if (_errorText != null && !_isPasswordSet) {
+
+    // If error and NOT guest mode
+    if (_errorText != null && !_isPasswordSet && !_isGuestMode) {
       return AlertDialog(
         title: const Text("خطأ في الاتصال"),
         content: Text(_errorText!),
@@ -357,17 +389,22 @@ class _ManagerPasswordDialogState extends State<_ManagerPasswordDialog> {
         ],
       );
     }
-    return _isPasswordSet
+
+    // If Guest Mode or No Password Set -> Show Info Dialog
+    return (_isPasswordSet && !_isGuestMode)
         ? _buildPasswordEntryDialog()
         : _buildFirstTimeInfoDialog();
   }
 
   Widget _buildFirstTimeInfoDialog() {
+    // Customize text for Guest Mode
+    final String message = _isGuestMode
+        ? 'أنت الآن في وضع التجربة (بدون إنترنت). يمكنك استخدام النظام كمدير، ولكن لن يتم حفظ البيانات على السحابة حتى تسجل الدخول.'
+        : 'لم تقم بتعيين كلمة مرور للمدير بعد. يمكنك الدخول مباشرة هذه المرة.\n\nنوصي بالذهاب إلى الإعدادات لتعيين كلمة مرور.';
+
     return AlertDialog(
       title: const Text('مرحباً بك أيها المدير'),
-      content: const Text(
-        'لم تقم بتعيين كلمة مرور للمدير بعد. يمكنك الدخول مباشرة هذه المرة.\n\nنوصي بالذهاب إلى الإعدادات لتعيين كلمة مرور.',
-      ),
+      content: Text(message),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

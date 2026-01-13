@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
@@ -12,15 +11,10 @@ import 'package:intl/intl.dart';
 class WithdrawalsScreen extends StatelessWidget {
   const WithdrawalsScreen({super.key});
 
-  
   void _showAddEditDialog(BuildContext context, {Withdrawal? withdrawal}) {
-    final profileState = context.read<ProfileCubit>().state;
-    if (profileState.profile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('جاري تحميل بيانات العملات...')),
-      );
-      return;
-    }
+    // --- REMOVED THE BLOCKING CHECK ---
+    // We allow the dialog to open even if profile is null.
+    // The dialog will simply default to USD if no other currencies are loaded.
 
     showDialog(
       context: context,
@@ -43,6 +37,7 @@ class WithdrawalsScreen extends StatelessWidget {
         BlocProvider(
           create: (context) => WithdrawalsCubit()..loadWithdrawals(),
         ),
+        // We still load the profile here to try and get rates in the background
         BlocProvider(create: (context) => ProfileCubit()..loadProfile()),
       ],
       child: Scaffold(

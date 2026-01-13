@@ -15,18 +15,34 @@ import 'package:hasbni/presentation/screens/sales/sales_history_screen.dart';
 import 'package:hasbni/presentation/screens/settings/settings_screen.dart';
 import 'package:hasbni/presentation/screens/withdrawals/withdrawals_screen.dart';
 import 'package:hasbni/presentation/widgets/home_list_item_widget.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // REMOVED BlocProvider here. We use the global one from main.dart
+    // Check if we are in Guest Mode
+    final authState = context.watch<AuthCubit>().state;
+    final isGuest = authState.user?.id == 0;
+
     return BlocBuilder<ProfileCubit, ProfileState>(
       builder: (context, state) {
-        final String shopName = state.profile?.shopName != null &&
-                state.profile!.shopName.isNotEmpty
-            ? state.profile!.shopName
-            : 'لوحة التحكم';
+        // --- FIX START ---
+        // If we have a profile (even from cache/default), show the UI immediately.
+        // Do NOT show spinner if we are simply refreshing in the background.
+        // Also, if in Guest Mode, show default title if profile is loading.
+        
+        final isLoading = state.status == ProfileStatus.loading || state.status == ProfileStatus.initial;
+        
+        // If we have data, use it. If loading and no data, check guest mode.
+        final hasData = state.profile != null;
+
+        String shopName = 'لوحة التحكم';
+        if (hasData) {
+          shopName = state.profile!.shopName.isNotEmpty ? state.profile!.shopName : shopName;
+        } else if (isGuest) {
+          shopName = 'متجر تجريبي'; // Immediate title for Guest
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -42,15 +58,13 @@ class HomeScreen extends StatelessWidget {
                 icon: const Icon(Icons.settings_outlined),
                 tooltip: 'الإعدادات',
                 onPressed: () {
-                  // Removed BlocProvider.value here, SettingsScreen can find ProfileCubit globally
-                   if (state.profile != null) {
-                    Navigator.push(
+                   // Allow settings even if profile is null (SettingsScreen handles it)
+                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const SettingsScreen(), // CLEANER
+                        builder: (_) => const SettingsScreen(),
                       ),
                     );
-                  }
                 },
               ),
               IconButton(
@@ -70,10 +84,9 @@ class HomeScreen extends StatelessWidget {
 
                   await SyncService().syncEverything();
 
-                  // THIS WILL NOW WORK because InventoryCubit is in main.dart
                   if (context.mounted) {
                     context.read<InventoryCubit>().loadProducts(isRefresh: true);
-                    context.read<ProfileCubit>().loadProfile(); // Refresh profile too
+                    context.read<ProfileCubit>().loadProfile(); 
                     
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('تمت المزامنة بنجاح')),
@@ -83,18 +96,17 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: _buildBody(context, state),
+          // --- FIX BODY LOGIC ---
+          body: (isLoading && !hasData && !isGuest) 
+              ? const Center(child: CircularProgressIndicator()) 
+              : _buildBody(context, state, isGuest),
         );
       },
     );
   }
 
-  Widget _buildBody(BuildContext context, ProfileState state) {
-    if (state.status == ProfileStatus.loading ||
-        state.status == ProfileStatus.initial) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (state.status == ProfileStatus.failure) {
+  Widget _buildBody(BuildContext context, ProfileState state, bool isGuest) {
+    if (state.status == ProfileStatus.failure && !isGuest) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -114,6 +126,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildMenuList(BuildContext context) {
+     // ... (Keep existing code exactly the same)
     final theme = Theme.of(context);
 
     final List<Map<String, dynamic>> dailyOps = [
@@ -135,7 +148,6 @@ class HomeScreen extends StatelessWidget {
         'onTap': () => Navigator.push(
               context,
               MaterialPageRoute(
-                // FIX: Wrap InventoryScreen with the existing ProfileCubit
                 builder: (_) => BlocProvider.value(
                   value: context.read<ProfileCubit>(),
                   child: const InventoryScreen(),
@@ -220,6 +232,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   List<Widget> _buildAnimatedList(List<Map<String, dynamic>> items) {
+     // ... (Keep existing code exactly the same)
     return AnimationConfiguration.toStaggeredList(
       duration: const Duration(milliseconds: 375),
       childAnimationBuilder: (widget) => SlideAnimation(
@@ -241,6 +254,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(String title) {
+     // ... (Keep existing code exactly the same)
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0, right: 8.0, top: 8.0),
       child: Text(

@@ -87,7 +87,7 @@ class AppNavigator extends StatelessWidget {
                 sessionCubit.initializeSession();
               }
               // --- END OF THE FIX ---
-
+                     
               // This inner builder now reacts to the SessionCubit's state changes.
               return BlocBuilder<SessionCubit, SessionState>(
                 builder: (context, sessionState) {

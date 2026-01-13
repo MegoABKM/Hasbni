@@ -12,12 +12,19 @@ class SyncService {
   Future<void> syncEverything() async {
     print("🔄 Starting Sync...");
     try {
+      // 1. PUSH Changes to Server
+      await _syncCategories(); // <--- Add this FIRST (Expenses depend on it)
       await _syncProducts();
       await _syncSales();
-      // Add other syncs (expenses, etc) here...
+      await _syncExpenses();   // <--- ADD
+      await _syncWithdrawals(); // <--- ADD
 
-      await _pullLatestData(); // Products
-      await _pullProfile(); // <--- ADD THIS
+      // 2. PULL Data from Server (Refresh)
+      await _pullLatestData();   // Products
+      await _pullProfile();
+      await _pullCategories(); // <--- Add this
+      await _pullExpenses();   // <--- ADD
+      await _pullWithdrawals(); // <--- ADD
 
       print("✅ Sync Complete");
     } catch (e) {
@@ -34,6 +41,7 @@ class SyncService {
     for (var row in rows) {
       final status = row['sync_status'];
       final localId = row['local_id'];
+      // FIX: Corrected typo 'server _id' -> 'server_id'
       final serverId = row['server_id'];
 
       try {
@@ -94,7 +102,7 @@ class SyncService {
               "⚠️ Skipping Sale ${sale['local_id']} because it contains unsynced products.");
           continue; // Skip this sale, try again next sync
         }
-// ----------------------
+        // ----------------------
 
         // Construct RPC Json
         final rpcItems = items
@@ -168,16 +176,10 @@ class SyncService {
   }
 
   Future<void> _pullProfile() async {
-    // Just calling getCurrentUserProfile in Repository will trigger
-    // fetch from API -> Save to Local logic we just wrote.
-    // However, we need to access the repo logic.
-    // Ideally, SyncService shouldn't depend on Repos, but for simplicity:
-
     final response = await _api.get(ApiConstants.profiles);
-    final profile = Product.fromJson(response); // Import Profile model
+    // ignore: unused_local_variable
+    final profile = Product.fromJson(response); 
 
-    // We need to duplicate the save logic or make ProfileRepository accessible.
-    // Use raw DB calls here to avoid circular dependencies if any.
     final db = await _db.database;
     await db.transaction((txn) async {
       await txn.insert(
@@ -205,5 +207,189 @@ class SyncService {
         }
       }
     });
+  }
+
+  // --- NEW: Sync Expenses ---
+  Future<void> _syncExpenses() async {
+    final db = await _db.database;
+    final rows = await db.query('expenses', where: 'sync_status != 0');
+
+    for (var row in rows) {
+      // FIX: Define localId and serverId here
+      final localId = row['local_id'];
+      final serverId = row['server_id'];
+
+      // Try to find the server_id for the category
+      int? serverCategoryId;
+      if (row['category_local_id'] != null) {
+        final catRow = await db.query('expense_categories',
+            columns: ['server_id'],
+            where: 'local_id = ?',
+            whereArgs: [row['category_local_id']]);
+        if (catRow.isNotEmpty) {
+          serverCategoryId = catRow.first['server_id'] as int?;
+        }
+      }
+
+      try {
+        if (row['sync_status'] == 1) {
+          // CREATE
+          final response = await _api.post(ApiConstants.expenses, {
+            'description': row['description'],
+            'amount': row['amount'],
+            'expense_date': row['expense_date'],
+            'currency_code': row['currency_code'],
+            'amount_in_currency': row['amount_in_currency'],
+            'category_id': serverCategoryId, // Send the mapped Server ID
+            'recurrence': row['recurrence'],
+          });
+          await db.update(
+              'expenses', {'server_id': response['id'], 'sync_status': 0},
+              where: 'local_id = ?', whereArgs: [localId]);
+        } else if (row['sync_status'] == 3 && serverId != null) {
+          // DELETE
+          await _api.delete('${ApiConstants.expenses}/$serverId');
+          await db.delete('expenses',
+              where: 'local_id = ?', whereArgs: [localId]);
+        }
+      } catch (e) {
+        print("Sync Expense Error: $e");
+      }
+    }
+  }
+
+  // --- NEW: Sync Withdrawals ---
+  Future<void> _syncWithdrawals() async {
+    final db = await _db.database;
+    final rows = await db.query('withdrawals', where: 'sync_status != 0');
+
+    for (var row in rows) {
+      try {
+        if (row['sync_status'] == 1) {
+          // CREATE
+          final response = await _api.post(ApiConstants.withdrawals, {
+            'description': row['description'],
+            'amount': row['amount'],
+            'withdrawal_date': row['withdrawal_date'],
+            'currency_code': row['currency_code'],
+            'amount_in_currency': row['amount_in_currency'],
+          });
+          await db.update(
+              'withdrawals', {'server_id': response['id'], 'sync_status': 0},
+              where: 'local_id = ?', whereArgs: [row['local_id']]);
+        } else if (row['sync_status'] == 3 && row['server_id'] != null) {
+          // DELETE
+          await _api.delete('${ApiConstants.withdrawals}/${row['server_id']}');
+          await db.delete('withdrawals',
+              where: 'local_id = ?', whereArgs: [row['local_id']]);
+        }
+      } catch (e) {
+        print("Sync Withdrawal Error: $e");
+      }
+    }
+  }
+
+  // --- NEW: Pull Methods (Simplest Approach: Clear & Refill) ---
+  Future<void> _pullExpenses() async {
+    try {
+      final List data = await _api.get(ApiConstants.expenses);
+      final db = await _db.database;
+      await db.transaction((txn) async {
+        // Keep unsynced (status != 0), delete synced (status == 0) to avoid duplicates
+        await txn.delete('expenses', where: 'sync_status = 0');
+        for (var item in data) {
+          // Map Server Category ID to Local Category ID
+          int? localCategoryId;
+          if (item['category_id'] != null) {
+            final catRow = await txn.query('expense_categories',
+                columns: ['local_id'],
+                where: 'server_id = ?',
+                whereArgs: [item['category_id']]);
+            if (catRow.isNotEmpty) {
+              localCategoryId = catRow.first['local_id'] as int;
+            }
+          }
+
+          await txn.insert('expenses', {
+            'server_id': item['id'],
+            'description': item['description'],
+            'amount': (item['amount'] as num).toDouble(),
+            'amount_in_currency':
+                (item['amount_in_currency'] ?? item['amount'] as num).toDouble(),
+            'currency_code': item['currency_code'] ?? 'USD',
+            'expense_date': item['expense_date'],
+            'recurrence': item['recurrence'],
+            'category_local_id': localCategoryId,
+            'sync_status': 0
+          });
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _pullWithdrawals() async {
+    try {
+      final List data = await _api.get(ApiConstants.withdrawals);
+      final db = await _db.database;
+      await db.transaction((txn) async {
+        await txn.delete('withdrawals', where: 'sync_status = 0');
+        for (var item in data) {
+          await txn.insert('withdrawals', {
+            'server_id': item['id'],
+            'description': item['description'],
+            'amount': (item['amount'] as num).toDouble(),
+            'amount_in_currency':
+                (item['amount_in_currency'] ?? item['amount'] as num).toDouble(),
+            'currency_code': item['currency_code'] ?? 'USD',
+            'withdrawal_date': item['withdrawal_date'],
+            'sync_status': 0
+          });
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _syncCategories() async {
+    final db = await _db.database;
+    final rows =
+        await db.query('expense_categories', where: 'sync_status != 0');
+
+    for (var row in rows) {
+      try {
+        if (row['sync_status'] == 1) {
+          // CREATE
+          final response = await _api
+              .post(ApiConstants.expenseCategories, {'name': row['name']});
+          await db.update('expense_categories',
+              {'server_id': response['id'], 'sync_status': 0},
+              where: 'local_id = ?', whereArgs: [row['local_id']]);
+        } else if (row['sync_status'] == 3 && row['server_id'] != null) {
+          // DELETE
+          await _api
+              .delete('${ApiConstants.expenseCategories}/${row['server_id']}');
+          await db.delete('expense_categories',
+              where: 'local_id = ?', whereArgs: [row['local_id']]);
+        }
+      } catch (e) {
+        print("Sync Category Error: $e");
+      }
+    }
+  }
+
+  Future<void> _pullCategories() async {
+    try {
+      final List data = await _api.get(ApiConstants.expenseCategories);
+      final db = await _db.database;
+      await db.transaction((txn) async {
+        await txn.delete('expense_categories', where: 'sync_status = 0');
+        for (var item in data) {
+          await txn.insert('expense_categories', {
+            'server_id': item['id'],
+            'name': item['name'],
+            'sync_status': 0
+          });
+        }
+      });
+    } catch (_) {}
   }
 }

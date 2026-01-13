@@ -47,14 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
-             // --- FIX START ---
-            if (state.status == AuthStatus.authenticated) {
-               // Usually AppNavigator handles this, but popping helps ensure
-               // we don't have a login screen stuck on top if pushed weirdly
-               // or if context allows
-            }
-            // --- FIX END ---
-
+            // AppNavigator handles navigation on authenticated state
             if (state.status == AuthStatus.failure) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
@@ -202,6 +195,20 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(color: theme.colorScheme.primary),
                           ),
                         ),
+
+                        // --- NEW BUTTON ---
+                        const Divider(height: 32),
+                        OutlinedButton.icon(
+                          onPressed: () => context.read<AuthCubit>().enterGuestMode(),
+                          icon: const Icon(Icons.offline_bolt),
+                          label: const Text('تجربة التطبيق (بدون إنترنت)'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(color: theme.colorScheme.secondary),
+                            foregroundColor: theme.colorScheme.secondary,
+                          ),
+                        ),
+                        // ------------------
                       ],
                     ),
                   ),
