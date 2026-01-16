@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/sale_model.dart';
@@ -8,7 +7,6 @@ class EditSaleItemDialog extends StatefulWidget {
   final SaleItem item;
   final String currency;
 
-  
   const EditSaleItemDialog({
     super.key,
     required this.item,
@@ -44,14 +42,12 @@ class _EditSaleItemDialogState extends State<EditSaleItemDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      
       final salesCubit = context.read<SalesCubit>();
 
       final newQuantity = int.tryParse(_quantityController.text) ?? 0;
       final newPrice = double.tryParse(_priceController.text) ?? 0.0;
 
       salesCubit.updatePrice(widget.item.product, newPrice);
-      
       salesCubit.updateQuantity(widget.item.product, newQuantity);
 
       Navigator.of(context).pop();
@@ -60,57 +56,60 @@ class _EditSaleItemDialogState extends State<EditSaleItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    
     final salesCubit = context.read<SalesCubit>();
 
     return AlertDialog(
       title: Text('تعديل "${widget.item.product.name}"'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _quantityController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'الكمية',
-                hintText: 'المتاح: ${widget.item.product.quantity}',
-                prefixIcon: const Icon(Icons.shopping_basket_outlined),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _quantityController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'الكمية',
+                  hintText: 'المتاح: ${widget.item.product.quantity}',
+                  prefixIcon: const Icon(Icons.shopping_basket_outlined),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'الحقل مطلوب';
+                  final quantity = int.tryParse(value);
+                  if (quantity == null || quantity < 0) {
+                    return 'أدخل رقماً صحيحاً';
+                  }
+                  // Removed check for quantity > available to allow overselling if desired,
+                  // or keep it if strict inventory is required.
+                  return null;
+                },
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'الحقل مطلوب';
-                final quantity = int.tryParse(value);
-                if (quantity == null || quantity < 0)
-                  return 'أدخل رقماً صحيحاً';
-                if (quantity > widget.item.product.quantity)
-                  return 'الكمية أكبر من المتوفر (${widget.item.product.quantity})';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _priceController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _priceController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'سعر البيع للوحدة',
+                  suffixText: widget.currency,
+                  hintText:
+                      'السعر الأصلي: ${widget.item.product.sellingPrice.toStringAsFixed(2)}',
+                  prefixIcon: const Icon(Icons.price_change_outlined),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'الحقل مطلوب';
+                  final price = double.tryParse(value);
+                  if (price == null || price < 0) return 'أدخل سعراً صحيحاً';
+                  return null;
+                },
               ),
-              decoration: InputDecoration(
-                labelText: 'سعر البيع للوحدة',
-                suffixText: widget.currency,
-                hintText:
-                    'السعر الأصلي: ${widget.item.product.sellingPrice.toStringAsFixed(2)}',
-                prefixIcon: const Icon(Icons.price_change_outlined),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'الحقل مطلوب';
-                final price = double.tryParse(value);
-                if (price == null || price < 0) return 'أدخل سعراً صحيحاً';
-                return null;
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
         TextButton(
           onPressed: () {
@@ -122,12 +121,19 @@ class _EditSaleItemDialogState extends State<EditSaleItemDialog> {
             style: TextStyle(color: Colors.redAccent),
           ),
         ),
-        const Spacer(),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('إلغاء'),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: _submit,
+              child: const Text('حفظ'),
+            ),
+          ],
         ),
-        ElevatedButton(onPressed: _submit, child: const Text('حفظ التعديلات')),
       ],
     );
   }

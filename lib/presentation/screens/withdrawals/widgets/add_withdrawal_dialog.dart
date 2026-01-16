@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
@@ -113,8 +112,8 @@ class _AddEditWithdrawalDialogState extends State<AddEditWithdrawalDialog> {
             child: const Text('حذف', style: TextStyle(color: Colors.red)),
             onPressed: () {
               context.read<WithdrawalsCubit>().deleteWithdrawal(
-                widget.withdrawal!.id!,
-              );
+                    widget.withdrawal!.id!,
+                  );
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },
@@ -133,9 +132,9 @@ class _AddEditWithdrawalDialogState extends State<AddEditWithdrawalDialog> {
         _isEditing ? 'تعديل السحب' : 'إضافة سحب شخصي',
         style: TextStyle(fontSize: scaleConfig.scaleText(20)),
       ),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,7 +150,7 @@ class _AddEditWithdrawalDialogState extends State<AddEditWithdrawalDialog> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
+                  Flexible(
                     flex: 3,
                     child: TextFormField(
                       controller: _amountController,
@@ -165,19 +164,22 @@ class _AddEditWithdrawalDialogState extends State<AddEditWithdrawalDialog> {
                         decimal: true,
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty)
-                          return 'المبلغ مطلوب';
-                        if (double.tryParse(value) == null)
+                        if (value == null || value.isEmpty) {
+                          return 'مطلوب';
+                        }
+                        if (double.tryParse(value) == null) {
                           return 'أدخل رقماً صحيحاً';
+                        }
                         return null;
                       },
                     ),
                   ),
                   SizedBox(width: scaleConfig.scale(8)),
-                  Expanded(
+                  Flexible(
                     flex: 2,
                     child: DropdownButtonFormField<String>(
                       value: _selectedCurrency,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'العملة',
                         labelStyle: TextStyle(
@@ -188,13 +190,17 @@ class _AddEditWithdrawalDialogState extends State<AddEditWithdrawalDialog> {
                           .map(
                             (rate) => DropdownMenuItem(
                               value: rate.currencyCode,
-                              child: Text(rate.currencyCode),
+                              child: Text(
+                                rate.currencyCode,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           )
                           .toList(),
                       onChanged: (value) {
-                        if (value != null)
+                        if (value != null) {
                           setState(() => _selectedCurrency = value);
+                        }
                       },
                     ),
                   ),
@@ -203,7 +209,7 @@ class _AddEditWithdrawalDialogState extends State<AddEditWithdrawalDialog> {
               SizedBox(height: scaleConfig.scale(16)),
               ListTile(
                 title: Text(
-                  'تاريخ السحب: ${DateFormat.yMMMd('ar').format(_selectedDate)}',
+                  'تاريخ: ${DateFormat.yMMMd('ar').format(_selectedDate)}',
                   style: TextStyle(fontSize: scaleConfig.scaleText(14)),
                 ),
                 trailing: const Icon(Icons.calendar_today),
@@ -214,20 +220,27 @@ class _AddEditWithdrawalDialogState extends State<AddEditWithdrawalDialog> {
           ),
         ),
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
         if (_isEditing)
           TextButton(
             onPressed: _delete,
             child: const Text('حذف', style: TextStyle(color: Colors.redAccent)),
-          ),
-        const Spacer(),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('إلغاء'),
-        ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: Text(_isEditing ? 'حفظ' : 'إضافة'),
+          )
+        else
+          const SizedBox(),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: _submit,
+              child: Text(_isEditing ? 'حفظ' : 'إضافة'),
+            ),
+          ],
         ),
       ],
     );

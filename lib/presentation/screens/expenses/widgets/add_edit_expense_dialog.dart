@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/utils/extention_shortcut.dart';
@@ -38,10 +37,7 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
       ...(profile?.exchangeRates ?? []),
     ];
 
-    
-    
     if (_isEditing) {
-      
       final expense = widget.expense!;
       _descriptionController = TextEditingController(text: expense.description);
       _amountController = TextEditingController(
@@ -52,11 +48,10 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
       _selectedCategoryId = expense.categoryId;
       _selectedRecurrence = expense.recurrence;
     } else {
-      
       _descriptionController = TextEditingController();
       _amountController = TextEditingController();
       _selectedDate = DateTime.now();
-      _selectedCurrency = 'USD'; 
+      _selectedCurrency = 'USD';
       _selectedRecurrence = 'one_time';
       _selectedCategoryId = null;
     }
@@ -100,9 +95,8 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
           ElevatedButton(
             onPressed: () {
               if (newCategoryController.text.trim().isNotEmpty) {
-                Navigator.of(
-                  dialogContext,
-                ).pop(newCategoryController.text.trim());
+                Navigator.of(dialogContext)
+                    .pop(newCategoryController.text.trim());
               }
             },
             child: const Text('إضافة'),
@@ -137,7 +131,7 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
       final newExpense = Expense(
         id: widget.expense?.id,
         description: _descriptionController.text.trim(),
-        amount: 0, 
+        amount: 0,
         amountInCurrency: amount,
         currencyCode: _selectedCurrency,
         expenseDate: _selectedDate,
@@ -171,8 +165,8 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
             child: const Text('حذف', style: TextStyle(color: Colors.red)),
             onPressed: () {
               context.read<ExpensesCubit>().deleteExpense(widget.expense!.id!);
-              Navigator.of(ctx).pop(); 
-              Navigator.of(context).pop(); 
+              Navigator.of(ctx).pop();
+              Navigator.of(context).pop();
             },
           ),
         ],
@@ -190,9 +184,9 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
         _isEditing ? 'تعديل المصروف' : 'إضافة مصروف جديد',
         style: TextStyle(fontSize: scaleConfig.scaleText(20)),
       ),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -209,7 +203,7 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
                         DropdownMenuItem(value: cat.id, child: Text(cat.name)),
                   ),
                   const DropdownMenuItem(
-                    value: -1, 
+                    value: -1,
                     child: Row(
                       children: [
                         Icon(Icons.add, size: 16),
@@ -232,7 +226,7 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
                 ),
                 validator: (value) => value == null ? 'الفئة مطلوبة' : null,
               ),
-              SizedBox(height: scaleConfig.scale(16)),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
@@ -242,11 +236,11 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
                 validator: (value) =>
                     value!.trim().isEmpty ? 'الوصف مطلوب' : null,
               ),
-              SizedBox(height: scaleConfig.scale(16)),
+              const SizedBox(height: 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
+                  Flexible(
                     flex: 3,
                     child: TextFormField(
                       controller: _amountController,
@@ -260,19 +254,22 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
                         decimal: true,
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty)
-                          return 'المبلغ مطلوب';
-                        if (double.tryParse(value) == null)
+                        if (value == null || value.isEmpty) {
+                          return 'مطلوب';
+                        }
+                        if (double.tryParse(value) == null) {
                           return 'أدخل رقماً صحيحاً';
+                        }
                         return null;
                       },
                     ),
                   ),
-                  SizedBox(width: scaleConfig.scale(8)),
-                  Expanded(
+                  const SizedBox(width: 8),
+                  Flexible(
                     flex: 2,
                     child: DropdownButtonFormField<String>(
                       value: _selectedCurrency,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'العملة',
                         labelStyle: TextStyle(
@@ -283,19 +280,23 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
                           .map(
                             (rate) => DropdownMenuItem(
                               value: rate.currencyCode,
-                              child: Text(rate.currencyCode),
+                              child: Text(
+                                rate.currencyCode,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           )
                           .toList(),
                       onChanged: (value) {
-                        if (value != null)
+                        if (value != null) {
                           setState(() => _selectedCurrency = value);
+                        }
                       },
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: scaleConfig.scale(16)),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedRecurrence,
                 decoration: InputDecoration(
@@ -309,14 +310,15 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
                   DropdownMenuItem(value: 'yearly', child: Text('سنوي')),
                 ],
                 onChanged: (value) {
-                  if (value != null)
+                  if (value != null) {
                     setState(() => _selectedRecurrence = value);
+                  }
                 },
               ),
-              SizedBox(height: scaleConfig.scale(16)),
+              const SizedBox(height: 16),
               ListTile(
                 title: Text(
-                  'تاريخ المصروف: ${DateFormat.yMMMd('ar').format(_selectedDate)}',
+                  'تاريخ: ${DateFormat.yMMMd('ar').format(_selectedDate)}',
                   style: TextStyle(fontSize: scaleConfig.scaleText(14)),
                 ),
                 trailing: const Icon(Icons.calendar_today),
@@ -327,20 +329,27 @@ class _AddEditExpenseDialogState extends State<AddEditExpenseDialog> {
           ),
         ),
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
         if (_isEditing)
           TextButton(
             onPressed: _delete,
             child: const Text('حذف', style: TextStyle(color: Colors.redAccent)),
-          ),
-        const Spacer(),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('إلغاء'),
-        ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: Text(_isEditing ? 'حفظ' : 'إضافة'),
+          )
+        else
+          const SizedBox(),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: _submit,
+              child: Text(_isEditing ? 'حفظ' : 'إضافة'),
+            ),
+          ],
         ),
       ],
     );
