@@ -1,4 +1,3 @@
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/data/models/exchange_rate_model.dart';
 import 'package:hasbni/data/models/product_model.dart';
@@ -16,13 +15,16 @@ class SalesCubit extends Cubit<SalesState> {
 
   void addProductToCart(Product product) {
     final List<SaleItem> updatedCart = List.from(state.cart);
+    
+    // --- FIX: Use localId instead of id ---
     final index = updatedCart.indexWhere(
-      (item) => item.product.id == product.id,
+      (item) => item.product.localId == product.localId,
     );
 
     final currentQuantityInCart = (index != -1)
         ? updatedCart[index].quantity
         : 0;
+    
     if (currentQuantityInCart >= product.quantity) {
       emit(
         state.copyWith(
@@ -30,6 +32,7 @@ class SalesCubit extends Cubit<SalesState> {
           errorMessage: 'لا توجد كمية إضافية من "${product.name}" في المخزون.',
         ),
       );
+      // Reset status after error
       Future.delayed(
         const Duration(seconds: 2),
         () => emit(state.copyWith(status: SalesStatus.initial)),
@@ -48,8 +51,10 @@ class SalesCubit extends Cubit<SalesState> {
   
   void updatePrice(Product product, double newPrice) {
     final List<SaleItem> updatedCart = List.from(state.cart);
+    
+    // --- FIX: Use localId instead of id ---
     final index = updatedCart.indexWhere(
-      (item) => item.product.id == product.id,
+      (item) => item.product.localId == product.localId,
     );
 
     if (index != -1) {
@@ -62,8 +67,10 @@ class SalesCubit extends Cubit<SalesState> {
 
   void updateQuantity(Product product, int quantity) {
     final List<SaleItem> updatedCart = List.from(state.cart);
+    
+    // --- FIX: Use localId instead of id ---
     final index = updatedCart.indexWhere(
-      (item) => item.product.id == product.id,
+      (item) => item.product.localId == product.localId,
     );
 
     if (index != -1) {
@@ -84,6 +91,7 @@ class SalesCubit extends Cubit<SalesState> {
           );
         }
       } else {
+        // If quantity is 0, remove item
         updatedCart.removeAt(index);
       }
     }
@@ -92,7 +100,10 @@ class SalesCubit extends Cubit<SalesState> {
 
   void removeFromCart(Product product) {
     final List<SaleItem> updatedCart = List.from(state.cart);
-    updatedCart.removeWhere((item) => item.product.id == product.id);
+    
+    // --- FIX: Use localId instead of id ---
+    updatedCart.removeWhere((item) => item.product.localId == product.localId);
+    
     _recalculateAndEmit(updatedCart);
   }
 

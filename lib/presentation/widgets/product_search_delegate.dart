@@ -14,22 +14,23 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
-      IconButton(
-        icon: const Icon(Icons.qr_code_scanner),
-        tooltip: 'امسح الباركود',
-        onPressed: () async {
-          final barcodeValue = await Navigator.of(context).push<String>(
-            MaterialPageRoute(
-              builder: (context) => const BarcodeScannerScreen(),
-            ),
-          );
-          if (barcodeValue != null && barcodeValue.isNotEmpty) {
-            SoundService().playBeep();
-            query = barcodeValue;
-            showResults(context);
-          }
-        },
+     IconButton(
+  icon: const Icon(Icons.qr_code_scanner),
+  tooltip: 'امسح الباركود',
+  onPressed: () async {
+    final barcodeValue = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const BarcodeScannerScreen(),
       ),
+    );
+    // --- FIX: Add .trim() here ---
+    if (barcodeValue != null && barcodeValue.trim().isNotEmpty) {
+      SoundService().playBeep();
+      query = barcodeValue.trim(); // Clean it before setting the query
+      showResults(context);
+    }
+  },
+),
       if (query.isNotEmpty)
         IconButton(
           icon: const Icon(Icons.clear),

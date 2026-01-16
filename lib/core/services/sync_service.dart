@@ -9,15 +9,16 @@ class SyncService {
   final DatabaseService _db = DatabaseService();
 
   // Call this when app starts or "Sync" button pressed
-  Future<void> syncEverything() async {
+ Future<void> syncEverything() async {
     print("🔄 Starting Sync...");
     try {
       // 1. PUSH Changes to Server
-      await _syncCategories(); // <--- Add this FIRST (Expenses depend on it)
+      await _syncCategories(); 
+      await _syncEmployees(); // <--- ADD THIS HERE (Before Sales)
       await _syncProducts();
-      await _syncSales();
-      await _syncExpenses();   // <--- ADD
-      await _syncWithdrawals(); // <--- ADD
+      await _syncSales();     // Sales depends on Employees and Products having Server IDs
+      await _syncExpenses();
+      await _syncWithdrawals();
 
       // 2. PULL Data from Server (Refresh)
       await _pullLatestData();   // Products
@@ -80,12 +81,39 @@ class SyncService {
   }
 
   // --- 2. Push Sales ---
-  Future<void> _syncSales() async {
+   Future<void> _syncSales() async {
     final db = await _db.database;
     final unsyncedSales = await db.query('sales', where: 'sync_status = 1');
 
     for (var sale in unsyncedSales) {
       try {
+        // --- FIX START: Resolve Employee Server ID ---
+        int? serverEmployeeId;
+        final localEmployeeId = sale['employee_id'];
+
+        if (localEmployeeId != null) {
+          final empResult = await db.query(
+            'employees',
+            columns: ['server_id'],
+            where: 'local_id = ?',
+            whereArgs: [localEmployeeId],
+          );
+
+          if (empResult.isNotEmpty) {
+            serverEmployeeId = empResult.first['server_id'] as int?;
+          }
+
+          // CRITICAL CHECK:
+          // If the employee exists locally but doesn't have a server_id yet
+          // (meaning they haven't synced), we CANNOT sync this sale yet.
+          // We skip this sale and wait for the next sync cycle.
+          if (serverEmployeeId == null) {
+            print("⚠️ Skipping Sale ${sale['local_id']}: Employee (Local ID $localEmployeeId) not yet synced to server.");
+            continue; 
+          }
+        }
+        // --- FIX END ---
+
         // Get Items
         final items = await db.rawQuery('''
           SELECT si.*, p.server_id as product_server_id 
@@ -94,30 +122,26 @@ class SyncService {
           WHERE si.sale_local_id = ?
         ''', [sale['local_id']]);
 
-        // --- ADD THIS CHECK ---
+        // Check for unsynced products
         bool hasUnsyncedProducts =
             items.any((item) => item['product_server_id'] == null);
         if (hasUnsyncedProducts) {
-          print(
-              "⚠️ Skipping Sale ${sale['local_id']} because it contains unsynced products.");
-          continue; // Skip this sale, try again next sync
+          print("⚠️ Skipping Sale ${sale['local_id']} because it contains unsynced products.");
+          continue; 
         }
-        // ----------------------
 
         // Construct RPC Json
-        final rpcItems = items
-            .map((item) => {
-                  'product_id': item['product_server_id'], // MUST use Server ID
-                  'quantity': item['quantity'],
-                  'price': item['price'],
-                })
-            .toList();
+        final rpcItems = items.map((item) => {
+          'product_id': item['product_server_id'], 
+          'quantity': item['quantity'],
+          'price': item['price'],
+        }).toList();
 
         final responseId = await _api.post(ApiConstants.createSale, {
           'p_sale_items_data': rpcItems,
           'p_currency_code': sale['currency_code'],
           'p_rate_to_usd_at_sale': sale['rate_to_usd_at_sale'],
-          'p_employee_id': sale['employee_id'],
+          'p_employee_id': serverEmployeeId, // <--- CHANGED: Send Server ID, not Local ID
         });
 
         // Mark synced
@@ -391,5 +415,44 @@ class SyncService {
         }
       });
     } catch (_) {}
+  }
+
+
+    Future<void> _syncEmployees() async {
+    final db = await _db.database;
+    final rows = await db.query('employees', where: 'sync_status != 0');
+
+    for (var row in rows) {
+      try {
+        if (row['sync_status'] == 1) {
+          // CREATE
+          final response = await _api.post(ApiConstants.employees, {
+            'full_name': row['full_name']
+          });
+          
+          // Update local with server ID
+          await db.update(
+            'employees', 
+            {'server_id': response['id'], 'sync_status': 0},
+            where: 'local_id = ?', 
+            whereArgs: [row['local_id']]
+          );
+        } else if (row['sync_status'] == 2 && row['server_id'] != null) {
+          // UPDATE
+          await _api.put('${ApiConstants.employees}/${row['server_id']}', {
+            'full_name': row['full_name']
+          });
+          await db.update('employees', {'sync_status': 0},
+              where: 'local_id = ?', whereArgs: [row['local_id']]);
+        } else if (row['sync_status'] == 3 && row['server_id'] != null) {
+          // DELETE
+          await _api.delete('${ApiConstants.employees}/${row['server_id']}');
+          await db.delete('employees',
+              where: 'local_id = ?', whereArgs: [row['local_id']]);
+        }
+      } catch (e) {
+        print("Error syncing employee ${row['local_id']}: $e");
+      }
+    }
   }
 }

@@ -42,12 +42,40 @@ class ProfileRepository {
     }
   }
 
-  Future<void> upsertProfile(Map<String, dynamic> profileData) async {
-    // Optimistic Update: Save local, then try api
-    // For now, we stick to API-first for settings to avoid conflicts
-    await _api.post(ApiConstants.profiles, profileData);
-    // If successful, refresh local cache
-    await getCurrentUserProfile(); 
+   Future<void> upsertProfile(Map<String, dynamic> profileData) async {
+    // 1. CONSTRUCT PROFILE OBJECT FROM DATA
+    // We need to construct a Profile object to save it locally manually
+    List<ExchangeRate> rates = [];
+    if (profileData['exchange_rates'] != null) {
+      rates = (profileData['exchange_rates'] as List)
+          .map((r) => ExchangeRate.fromJson(r))
+          .toList();
+    }
+    
+    final profileToSave = Profile(
+      id: 1, // Singleton ID
+      shopName: profileData['shop_name'],
+      address: profileData['address'],
+      phoneNumber: profileData['phone_number'],
+      city: profileData['city'],
+      exchangeRates: rates,
+      hasManagerPassword: false, // Default, updated via other endpoints
+    );
+
+    // 2. SAVE LOCALLY FIRST (This fixes the saving issue)
+    print("💾 Saving profile locally...");
+    await _saveProfileLocally(profileToSave);
+
+    // 3. TRY SYNCING TO SERVER (Background try)
+    try {
+      if (!ApiService.isOfflineMode) {
+         await _api.post(ApiConstants.profiles, profileData);
+         print("✅ Profile synced to server.");
+      }
+    } catch (e) {
+      print("⚠️ Could not sync profile to server (Offline): $e");
+      // We don't throw error here, because we successfully saved locally!
+    }
   }
 
   // --- Local Database Helpers ---

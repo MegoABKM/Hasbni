@@ -9,6 +9,8 @@ import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';
 import 'package:hasbni/presentation/cubits/profile/profile_state.dart';
 import 'package:hasbni/presentation/cubits/reports/reports_cubit.dart';
 import 'package:hasbni/presentation/cubits/reports/reports_state.dart';
+import 'package:hasbni/presentation/screens/reports/taps/charts_tab.dart';
+import 'package:hasbni/presentation/screens/reports/taps/dairy_tab.dart';
 import 'package:intl/intl.dart';
 
 
@@ -72,9 +74,24 @@ class ReportsView extends StatefulWidget {
   State<ReportsView> createState() => _ReportsViewState();
 }
 
-class _ReportsViewState extends State<ReportsView> {
+class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStateMixin{
   bool _subtractWithdrawals = false;
+  late TabController _tabController;
   String _displayCurrency = 'USD';
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this); // Change 2 to 3
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   
   double _convertFromUsd(
@@ -147,39 +164,65 @@ class _ReportsViewState extends State<ReportsView> {
 
   @override
   Widget build(BuildContext context) {
-    final reportsState = widget.reportsState;
-    final profile = widget.profile;
+    // final reportsState = widget.reportsState;
+    // final profile = widget.profile;
 
-    return Column(
+  return Column(
       children: [
-        _buildTimePeriodSelector(context, reportsState),
+        // 1. Controls (Date & Currency) - Keep at top
+        _buildTimePeriodSelector(context, widget.reportsState),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(
-            _formatDateRange(reportsState),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(color: Colors.grey[400]),
+            _formatDateRange(widget.reportsState),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey),
           ),
         ),
-        _buildCurrencySelector(profile),
-        if (reportsState.status == ReportsStatus.loading)
-          const Expanded(child: Center(child: CircularProgressIndicator()))
-        else if (reportsState.status == ReportsStatus.failure)
-          Expanded(
-            child: Center(child: Text(reportsState.errorMessage ?? "Error")),
-          )
-        else
-          Expanded(
-            child: _buildSummaryCards(
-              context,
-              reportsState.summary,
-              profile?.exchangeRates ?? [],
-            ),
-          ),
+        _buildCurrencySelector(widget.profile),
+
+        // 2. Tab Bar
+        TabBar(
+          controller: _tabController,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: Theme.of(context).colorScheme.primary,
+          tabs: const [
+            Tab(text: "نظرة عامة"), // General View
+            Tab(text: "اليوميات"), 
+                     Tab(text: "الرسوم البيانية"),  // Diary
+          ],
+        ),
+
+        // 3. Tab Content
+      // Content
+        Expanded(
+          child: widget.reportsState.status == ReportsStatus.loading
+              ? const Center(child: CircularProgressIndicator())
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // Tab 1: Grid
+                    _buildSummaryCards(context, widget.reportsState.summary, widget.profile?.exchangeRates ?? []),
+                    
+                    // Tab 2: Diary
+                    DiaryTab(
+                      items: widget.reportsState.diaryEntries,
+                      summary: widget.reportsState.summary,
+                      displayCurrency: _displayCurrency,
+                    ),
+
+                    // Tab 3: Charts (NEW)
+                    ChartsTab(
+                      diaryItems: widget.reportsState.diaryEntries,
+                      displayCurrency: _displayCurrency,
+                    ),
+                  ],
+                ),
+        ),
       ],
     );
   }
+
 
   Widget _buildTimePeriodSelector(BuildContext context, ReportsState state) {
     final cubit = context.read<ReportsCubit>();

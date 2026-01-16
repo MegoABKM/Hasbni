@@ -12,7 +12,7 @@ class ApiService {
 
   // Timeout duration: If server doesn't reply in 5 seconds, go offline.
   static const Duration _timeout = Duration(seconds: 10);
-
+ static bool isOfflineMode = false; 
   Future<String?> getToken() async {
     return await _storage.read(key: 'auth_token');
   }
@@ -35,25 +35,25 @@ class ApiService {
   }
 
   /// The "Smart" Request Handler
-  Future<dynamic> _performRequest(
-      Future<http.Response> Function() request) async {
-    // 1. Check Internet Connection First
+  Future<dynamic> _performRequest(Future<http.Response> Function() request) async {
+    // --- 1. CHECK GLOBAL OFFLINE MODE ---
+    if (isOfflineMode) {
+      print("⚠️ Global Offline Mode active. Skipping network request.");
+      throw SocketException('Offline Mode'); 
+    }
+
+    // 2. Check Device Connectivity (Wifi/Data enabled?)
     bool connected = await _network.isConnected;
     if (!connected) {
-      print("⚠️ No Internet Connection. Switching to Offline Mode.");
-      throw SocketException(
-          'No Internet'); // This triggers the Repository catch block
+      throw SocketException('No Internet'); 
     }
 
     try {
-      // 2. Execute Request with Timeout
       final response = await request().timeout(_timeout);
       return _handleResponse(response);
     } on TimeoutException {
-      print("⚠️ Server timed out. Switching to Offline Mode.");
-      throw SocketException('Server Timeout'); // Triggers offline fallback
+      throw SocketException('Server Timeout');
     } on SocketException {
-      print("⚠️ Server unreachable. Switching to Offline Mode.");
       throw SocketException('Server Unreachable');
     } catch (e) {
       rethrow;

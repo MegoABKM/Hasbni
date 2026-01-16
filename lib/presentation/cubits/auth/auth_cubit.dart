@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hasbni/core/services/api_services.dart';
 import 'package:hasbni/core/services/sync_service.dart';
 import 'package:hasbni/data/repositories/auth_repository.dart';
 import 'package:hasbni/data/models/user_model.dart';
@@ -35,6 +36,10 @@ class AuthCubit extends Cubit<AuthState> {
 
   // --- NEW: Guest Mode ---
   void enterGuestMode() {
+    // 1. FORCE OFFLINE MODE
+    ApiService.isOfflineMode = true;
+    print("🚀 Guest Mode Activated: Network disabled.");
+
     // Create a dummy user for offline testing
     const guestUser = User(
       id: 0, 

@@ -46,9 +46,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final barcodeValue = await Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (context) => const BarcodeScannerScreen()),
     );
+    // --- FIX: Add .trim() here ---
     if (barcodeValue != null && mounted) {
       setState(() {
-        _barcodeController.text = barcodeValue;
+        _barcodeController.text = barcodeValue.trim();
       });
     }
   }
@@ -56,10 +57,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
    void _submitForm() async { // Make async
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true); // Disable button
-
+  final cleanBarcode = _barcodeController.text.trim();
       final productData = {
         'name': _nameController.text,
-        'barcode': _barcodeController.text.isEmpty ? null : _barcodeController.text,
+          'barcode': cleanBarcode.isEmpty ? null : cleanBarcode,
         'quantity': int.parse(_quantityController.text),
         'cost_price': double.parse(_costPriceController.text),
         'selling_price': double.parse(_sellingPriceController.text),

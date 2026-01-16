@@ -112,13 +112,24 @@ class ReportsCubit extends Cubit<ReportsState> {
         break;
     }
 
-    try {
-      
+      try {
+      // 1. Fetch Summary
       final summary = await _repository.getFinancialSummary(
         startDate: startDate,
         endDate: endDate,
       );
-      emit(state.copyWith(status: ReportsStatus.success, summary: summary));
+
+      // 2. Fetch Diary Entries (NEW)
+      final diary = await _repository.getDiaryEntries(
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      emit(state.copyWith(
+        status: ReportsStatus.success, 
+        summary: summary,
+        diaryEntries: diary, // <--- Emit new data
+      ));
     } catch (e) {
       emit(
         state.copyWith(

@@ -196,19 +196,24 @@ class PointOfSaleScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('مسح باركود'),
-              onPressed: () async {
-                final barcode = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => const BarcodeScannerScreen(),
-                  ),
-                );
-                if (barcode != null && barcode.isNotEmpty) {
-                  final searchService = SearchService();
-                  final products = await searchService.searchProducts(barcode);
+       Expanded(
+  child: ElevatedButton.icon(
+    icon: const Icon(Icons.qr_code_scanner),
+    label: const Text('مسح باركود'),
+    onPressed: () async {
+      final barcode = await Navigator.of(context).push<String>(
+        MaterialPageRoute(
+          builder: (_) => const BarcodeScannerScreen(),
+        ),
+      );
+      
+      // --- FIX: Add .trim() here ---
+      if (barcode != null && barcode.trim().isNotEmpty) {
+        final cleanBarcode = barcode.trim(); // Remove invisible spaces/enters
+        
+        final searchService = SearchService();
+        final products = await searchService.searchProducts(cleanBarcode);
+        
                   if (products.length == 1) {
                     cubit.addProductToCart(products.first);
                   } else if (products.length > 1) {

@@ -29,6 +29,7 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.8.3
   connectivity_plus: ^6.0.3
+  fl_chart: ^0.70.0
 # It's better practice to move build tools to dev_dependencies
 # but leaving it here as it was in your original file.
 
@@ -44,13 +45,13 @@ dev_dependencies:
 flutter_launcher_icons:
   # The path to your high-resolution source icon.
   # Assuming your logo is in 'assets/images/'. Change this if it's different.
-  image_path: "assets/images/logo.webp"
+  image_path: "assets/images/logo.png"
 
   # Android specific settings
   android: true
   # For modern Android, you need an adaptive icon (foreground + background)
   # The background is a solid color. Change this to your app's brand color.
-  adaptive_icon_background: "#1F1F1F" 
+  adaptive_icon_background: "#FFFFFF" 
   # The foreground is your logo with transparency around it.
   adaptive_icon_foreground: "assets/images/logo.png"
 
