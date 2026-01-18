@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Import ScreenUtil
 import 'package:hasbni/core/theme/app_theme.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_cubit.dart';
 import 'package:hasbni/presentation/cubits/auth/auth_state.dart';
-import 'package:hasbni/presentation/cubits/inventory/inventory_cubit.dart'; // Import
-import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';   // Import
+import 'package:hasbni/presentation/cubits/inventory/inventory_cubit.dart';
+import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';
 import 'package:hasbni/presentation/cubits/session/session_cubit.dart';
 import 'package:hasbni/presentation/cubits/session/session_state.dart';
 import 'package:hasbni/presentation/screens/auth/login_screen.dart';
@@ -37,28 +38,33 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => AuthCubit()..initialize()),
         BlocProvider(create: (context) => SessionCubit()),
-        // --- GLOBAL PROVIDERS (ADDED) ---
-        // Load Profile immediately so currency rates are ready
         BlocProvider(create: (context) => ProfileCubit()..loadProfile()),
-        // Create InventoryCubit globally so HomeScreen can access it
         BlocProvider(create: (context) => InventoryCubit()), 
-        // --------------------------------
       ],
-      child: MaterialApp(
-        title: 'Hasbni App',
-        theme: AppTheme.darkTheme,
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('ar', '')],
-        home: const AppNavigator(),
+      // 1. Initialize ScreenUtil
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812), // The size you used in ScaleConfig
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return MaterialApp(
+            title: 'Hasbni App',
+            theme: AppTheme.darkTheme,
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ar', '')],
+            home: const AppNavigator(),
+          );
+        },
       ),
     );
   }
 }
+
 // --- THIS WIDGET CONTAINS THE FIX ---
 class AppNavigator extends StatelessWidget {
   const AppNavigator({super.key});

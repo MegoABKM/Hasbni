@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hasbni/data/models/exchange_rate_model.dart';
 import 'package:hasbni/data/models/sale_model.dart';
+import 'package:hasbni/presentation/cubits/profile/profile_cubit.dart';
 import 'package:hasbni/presentation/cubits/sales/sales_cubit.dart';
 
 class EditSaleItemDialog extends StatefulWidget {
@@ -22,16 +24,27 @@ class _EditSaleItemDialogState extends State<EditSaleItemDialog> {
   late TextEditingController _quantityController;
   late TextEditingController _priceController;
 
-  @override
-  void initState() {
-    super.initState();
-    _quantityController = TextEditingController(
-      text: widget.item.quantity.toString(),
-    );
-    _priceController = TextEditingController(
-      text: widget.item.sellingPrice.toStringAsFixed(2),
-    );
-  }
+  // Update initState to pre-fill the controller with the converted price
+@override
+void initState() {
+  super.initState();
+  _quantityController = TextEditingController(
+    text: widget.item.quantity.toString(),
+  );
+
+  // Convert USD base price to displayed currency for the text field
+  final profile = context.read<ProfileCubit>().state.profile;
+  final rate = profile?.exchangeRates
+      .firstWhere((r) => r.currencyCode == widget.currency, 
+      orElse: () => const ExchangeRate(id: 0, currencyCode: 'USD', rateToUsd: 1.0))
+      .rateToUsd ?? 1.0;
+
+  final displayPrice = widget.item.sellingPrice * rate;
+
+  _priceController = TextEditingController(
+    text: displayPrice.toStringAsFixed(2),
+  );
+}
 
   @override
   void dispose() {
@@ -40,19 +53,37 @@ class _EditSaleItemDialogState extends State<EditSaleItemDialog> {
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      final salesCubit = context.read<SalesCubit>();
+ void _submit() {
+  if (_formKey.currentState!.validate()) {
+    final salesCubit = context.read<SalesCubit>();
+    final profileCubit = context.read<ProfileCubit>();
 
-      final newQuantity = int.tryParse(_quantityController.text) ?? 0;
-      final newPrice = double.tryParse(_priceController.text) ?? 0.0;
+    final newQuantity = int.tryParse(_quantityController.text) ?? 0;
+    final enteredPrice = double.tryParse(_priceController.text) ?? 0.0;
 
-      salesCubit.updatePrice(widget.item.product, newPrice);
-      salesCubit.updateQuantity(widget.item.product, newQuantity);
+    // --- LOGIC FIX ---
+    double priceInUsd = enteredPrice;
+    
+    // Find the rate for the currency passed to this widget
+    final rate = profileCubit.state.profile?.exchangeRates
+        .firstWhere((r) => r.currencyCode == widget.currency, 
+        orElse: () => const ExchangeRate(id: 0, currencyCode: 'USD', rateToUsd: 1.0))
+        .rateToUsd ?? 1.0;
 
-      Navigator.of(context).pop();
+    if (widget.currency != 'USD' && rate > 0) {
+      // Convert the entered local price back to USD for storage
+      priceInUsd = enteredPrice / rate;
     }
+    // ----------------
+
+    salesCubit.updatePrice(widget.item.product, priceInUsd);
+    salesCubit.updateQuantity(widget.item.product, newQuantity);
+
+    Navigator.of(context).pop();
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Import
 
 class HomeListItem extends StatelessWidget {
   final String title;
@@ -21,28 +21,28 @@ class HomeListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: EdgeInsets.only(bottom: 12.0.h), // Responsive Padding
       child: Material(
         color: theme.scaffoldBackgroundColor, 
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r), // Responsive Radius
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           splashColor: iconColor.withOpacity(0.2),
           highlightColor: iconColor.withOpacity(0.1),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h), // Responsive Padding
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
                     color: iconColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
-                  child: Icon(icon, color: iconColor, size: 24),
+                  child: Icon(icon, color: iconColor, size: 24.r), // Responsive Icon
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,22 +51,24 @@ class HomeListItem extends StatelessWidget {
                         title,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          fontSize: 16.sp, // Responsive Font
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey[400],
+                          fontSize: 12.sp, // Responsive Font
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios,
                   color: Colors.grey,
-                  size: 16,
+                  size: 16.r,
                 ),
               ],
             ),

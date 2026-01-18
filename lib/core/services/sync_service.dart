@@ -12,20 +12,21 @@ class SyncService {
  Future<void> syncEverything() async {
     print("🔄 Starting Sync...");
     try {
-      // 1. PUSH Changes to Server
-      await _syncCategories(); 
-      await _syncEmployees(); // <--- ADD THIS HERE (Before Sales)
+    await _syncCategories();
+      await _syncEmployees();
       await _syncProducts();
-      await _syncSales();     // Sales depends on Employees and Products having Server IDs
+      await _syncSales();
       await _syncExpenses();
       await _syncWithdrawals();
 
-      // 2. PULL Data from Server (Refresh)
-      await _pullLatestData();   // Products
+      // 2. PULL Data (Order matters for foreign keys)
       await _pullProfile();
-      await _pullCategories(); // <--- Add this
-      await _pullExpenses();   // <--- ADD
-      await _pullWithdrawals(); // <--- ADD
+      await _pullEmployees(); // Pull employees before sales
+      await _pullLatestData(); // Products
+      await _pullCategories();
+      await _pullExpenses();
+      await _pullWithdrawals();
+      await _pullSalesHistory(); 
 
       print("✅ Sync Complete");
     } catch (e) {
@@ -137,16 +138,17 @@ class SyncService {
           'price': item['price'],
         }).toList();
 
-        final responseId = await _api.post(ApiConstants.createSale, {
+final response = await _api.post(ApiConstants.createSale, {
           'p_sale_items_data': rpcItems,
           'p_currency_code': sale['currency_code'],
           'p_rate_to_usd_at_sale': sale['rate_to_usd_at_sale'],
-          'p_employee_id': serverEmployeeId, // <--- CHANGED: Send Server ID, not Local ID
+          'p_employee_id': serverEmployeeId,
         });
 
         // Mark synced
+        // response is now Map<String, dynamic> containing 'id'
         await db.update('sales',
-            {'server_id': int.parse(responseId.toString()), 'sync_status': 0},
+            {'server_id': response['id'], 'sync_status': 0},
             where: 'local_id = ?', whereArgs: [sale['local_id']]);
       } catch (e) {
         print("Error syncing sale ${sale['local_id']}: $e");
@@ -453,6 +455,91 @@ class SyncService {
       } catch (e) {
         print("Error syncing employee ${row['local_id']}: $e");
       }
+    }
+  }
+
+
+  Future<void> _pullEmployees() async {
+    try {
+      final List data = await _api.get(ApiConstants.employees);
+      final db = await _db.database;
+      await db.transaction((txn) async {
+        // Simple approach: Only insert missing, update existing
+        for (var item in data) {
+           // Check if server_id exists
+           final existing = await txn.query('employees', where: 'server_id = ?', whereArgs: [item['id']]);
+           if (existing.isEmpty) {
+             await txn.insert('employees', {
+               'server_id': item['id'],
+               'full_name': item['full_name'],
+               'sync_status': 0
+             });
+           }
+        }
+      });
+    } catch (_) {}
+  }
+
+    Future<void> _pullSalesHistory() async {
+    try {
+      // Pull last 100 sales to keep it light.
+      // In a real app, you might use pagination or 'last_sync_date'.
+      final response = await _api.get('${ApiConstants.sales}?limit=100');
+      final List salesData = response['data']; // Laravel paginate returns {data: []}
+
+      final db = await _db.database;
+      
+      for (var saleJson in salesData) {
+        // Check if sale exists locally
+        final existing = await db.query('sales', where: 'server_id = ?', whereArgs: [saleJson['id']]);
+        
+        if (existing.isEmpty) {
+          // 1. Insert Sale Header
+          int localSaleId = await db.insert('sales', {
+            'server_id': saleJson['id'],
+            'total_price': (saleJson['total_price'] as num).toDouble(),
+            'currency_code': saleJson['currency_code'] ?? 'USD',
+            'rate_to_usd_at_sale': (saleJson['rate_to_usd_at_sale'] as num?)?.toDouble() ?? 1.0,
+            'created_at': saleJson['created_at'],
+            'sync_status': 0,
+          });
+
+          // 2. Fetch Details for this sale (We need items for returns)
+          // We use the RPC endpoint to get full details including items
+          try {
+             final fullDetail = await _api.post(ApiConstants.getSaleDetails, {'p_sale_id': saleJson['id']});
+             
+             if (fullDetail['items'] != null) {
+               for (var itemJson in fullDetail['items']) {
+                 
+                 // Try to find product local ID by server ID
+                 int? localProductId;
+                 final prodResult = await db.query('products', 
+                    columns: ['local_id'], 
+                    where: 'server_id = ?', 
+                    whereArgs: [itemJson['product_id']]);
+                 
+                 if (prodResult.isNotEmpty) {
+                   localProductId = prodResult.first['local_id'] as int;
+                 }
+
+                 await db.insert('sale_items', {
+                   'sale_local_id': localSaleId,
+                   'product_local_id': localProductId, // Might be null if product deleted
+                   'quantity': itemJson['quantity_sold'],
+                   'returned_quantity': itemJson['returned_quantity'],
+                   'price': (itemJson['price_at_sale'] as num).toDouble(),
+                   'cost_price_at_sale': (itemJson['cost_price_at_sale'] as num).toDouble(),
+                 });
+               }
+             }
+          } catch (e) {
+            print("Failed to pull details for sale ${saleJson['id']}: $e");
+          }
+        }
+      }
+    } catch (e) {
+      print("Pull Sales Error: $e");
     }
   }
 }

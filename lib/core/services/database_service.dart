@@ -23,7 +23,22 @@ class DatabaseService {
       onCreate: _createDB,
     );
   }
-
+  Future<void> wipeDatabase() async {
+  final db = await database;
+  await db.transaction((txn) async {
+    await txn.delete('products');
+    await txn.delete('employees');
+    await txn.delete('expenses');
+    await txn.delete('expense_categories');
+    await txn.delete('sales');
+    await txn.delete('sale_items');
+    await txn.delete('withdrawals');
+    // Keep profiles or not? Usually yes, delete to force fresh login data.
+    await txn.delete('profiles'); 
+    await txn.delete('exchange_rates');
+  });
+  print("⚠️ Database wiped on logout.");
+}
   Future<void> _createDB(Database db, int version) async {
     // --- 1. PRODUCTS ---
     await db.execute('''

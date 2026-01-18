@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Import ScreenUtil
 import 'package:hasbni/core/services/currency_converter_service.dart';
 import 'package:hasbni/data/models/product_model.dart';
 import 'package:hasbni/presentation/cubits/inventory/inventory_cubit.dart';
@@ -14,12 +15,10 @@ class InventoryScreen extends StatefulWidget {
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
 }
+
 class _InventoryScreenState extends State<InventoryScreen> {
   final _scrollController = ScrollController();
   Timer? _debounce;
-  
-  // REMOVED: late InventoryCubit _inventoryCubit; 
-  // We will use context.read<InventoryCubit>()
 
   String _selectedDisplayCurrency = 'USD';
 
@@ -36,13 +35,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _debounce?.cancel();
-    // REMOVED: _inventoryCubit.close(); // Do not close global cubit!
     super.dispose();
   }
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 300) {
+        _scrollController.position.maxScrollExtent - 300.h) {
+      // Responsive threshold
       context.read<InventoryCubit>().loadProducts();
     }
   }
@@ -57,11 +56,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Future<void> _navigateAndRefresh(Widget screen) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => screen), // Just push screen
+      MaterialPageRoute(builder: (_) => screen),
     );
     // Refresh global cubit when returning
     if (mounted) {
-       context.read<InventoryCubit>().refresh(); 
+      context.read<InventoryCubit>().refresh();
     }
   }
 
@@ -69,12 +68,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
     showDialog(
       context: context,
       builder: (confirmCtx) => AlertDialog(
-        title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من رغبتك في حذف "${product.name}"؟'),
+        title: Text('تأكيد الحذف', style: TextStyle(fontSize: 18.sp)),
+        content: Text(
+          'هل أنت متأكد من رغبتك في حذف "${product.name}"؟',
+          style: TextStyle(fontSize: 14.sp),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(confirmCtx).pop(),
-            child: const Text('إلغاء'),
+            child: Text('إلغاء', style: TextStyle(fontSize: 14.sp)),
           ),
           TextButton(
             onPressed: () {
@@ -82,7 +84,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
               context.read<InventoryCubit>().deleteProduct(product.localId!);
               Navigator.of(confirmCtx).pop();
             },
-            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+            child: Text(
+              'حذف',
+              style: TextStyle(color: Colors.red, fontSize: 14.sp),
+            ),
           ),
         ],
       ),
@@ -106,55 +111,61 @@ class _InventoryScreenState extends State<InventoryScreen> {
     if (!currencies.contains(_selectedDisplayCurrency)) {
       _selectedDisplayCurrency = 'USD';
     }
- return Scaffold(
-        appBar: AppBar(
-          title: const Text('المخزن'),
-          actions: [
-            // 2. Dropdown to select currency
-            DropdownButton<String>(
-              value: _selectedDisplayCurrency,
-              dropdownColor: Theme.of(context).cardColor,
-              underline: const SizedBox(),
-              icon: const Icon(Icons.monetization_on_outlined),
-              items: currencies.map((c) {
-                return DropdownMenuItem(value: c, child: Text(c));
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() => _selectedDisplayCurrency = val);
-                }
-              },
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () =>
-                  _navigateAndRefresh(const AddEditProductScreen()),
-            ),
-          ],
-        ),
-        body: BlocBuilder<InventoryCubit, InventoryState>(
-          builder: (context, state) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: TextField(
-                    onChanged: _onSearchChanged,
-                    decoration: const InputDecoration(
-                      hintText: 'ابحث...',
-                      prefixIcon: Icon(Icons.search),
-                    ),
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('المخزن', style: TextStyle(fontSize: 20.sp)),
+        actions: [
+          // 2. Dropdown to select currency
+          DropdownButton<String>(
+            value: _selectedDisplayCurrency,
+            dropdownColor: Theme.of(context).cardColor,
+            underline: const SizedBox(),
+            icon: Icon(Icons.monetization_on_outlined, size: 24.r),
+            style: TextStyle(
+                fontSize: 14.sp,
+                color: Theme.of(context).textTheme.bodyLarge?.color),
+            items: currencies.map((c) {
+              return DropdownMenuItem(value: c, child: Text(c));
+            }).toList(),
+            onChanged: (val) {
+              if (val != null) {
+                setState(() => _selectedDisplayCurrency = val);
+              }
+            },
+          ),
+          SizedBox(width: 8.w),
+          IconButton(
+            icon: Icon(Icons.add, size: 24.r),
+            onPressed: () => _navigateAndRefresh(const AddEditProductScreen()),
+          ),
+        ],
+      ),
+      body: BlocBuilder<InventoryCubit, InventoryState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                child: TextField(
+                  onChanged: _onSearchChanged,
+                  style: TextStyle(fontSize: 14.sp),
+                  decoration: InputDecoration(
+                    hintText: 'ابحث...',
+                    hintStyle: TextStyle(fontSize: 14.sp),
+                    prefixIcon: Icon(Icons.search, size: 24.r),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
                   ),
                 ),
-                _buildSortOptions(context, state),
-                Expanded(child: _buildBody(context, state)),
-              ],
-            );
-          },
-        ));
-      
-    
+              ),
+              _buildSortOptions(context, state),
+              Expanded(child: _buildBody(context, state)),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildBody(BuildContext context, InventoryState state) {
@@ -166,18 +177,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(state.errorMessage ?? 'حدث خطأ'),
-            const SizedBox(height: 10),
+            Text(
+              state.errorMessage ?? 'حدث خطأ',
+              style: TextStyle(fontSize: 16.sp),
+            ),
+            SizedBox(height: 10.h),
             ElevatedButton(
               onPressed: () => context.read<InventoryCubit>().refresh(),
-              child: const Text('إعادة المحاولة'),
+              child: Text('إعادة المحاولة', style: TextStyle(fontSize: 14.sp)),
             ),
           ],
         ),
       );
     }
     if (state.products.isEmpty) {
-      return const Center(child: Text('لا توجد منتجات.'));
+      return Center(
+        child: Text(
+          'لا توجد منتجات.',
+          style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+        ),
+      );
     }
 
     return _buildDataTable(context, state);
@@ -197,15 +216,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             showCheckboxColumn: false,
+            columnSpacing: 20.w, // Responsive spacing
+            headingRowHeight: 56.h, // Responsive height
+            dataRowMinHeight: 48.h, // Responsive height
+            dataRowMaxHeight: 64.h, // Allow growth for text wrapping
             columns: [
-              const DataColumn(label: Text('الصنف')),
-              const DataColumn(label: Text('الكمية'), numeric: true),
+              DataColumn(
+                  label: Text('الصنف',
+                      style: TextStyle(
+                          fontSize: 14.sp, fontWeight: FontWeight.bold))),
+              DataColumn(
+                  label: Text('الكمية',
+                      style: TextStyle(
+                          fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                  numeric: true),
               // 4. Dynamic Header
               DataColumn(
-                label: Text('سعر البيع ($_selectedDisplayCurrency)'),
+                label: Text('سعر البيع ($_selectedDisplayCurrency)',
+                    style: TextStyle(
+                        fontSize: 14.sp, fontWeight: FontWeight.bold)),
                 numeric: true,
               ),
-              const DataColumn(label: Text('إجراءات')),
+              DataColumn(
+                  label: Text('إجراءات',
+                      style: TextStyle(
+                          fontSize: 14.sp, fontWeight: FontWeight.bold))),
             ],
             rows: [
               ...state.products.map((product) {
@@ -220,22 +255,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     if (selected ?? false) _showProductDetailsDialog(product);
                   },
                   cells: [
-                    DataCell(Text(product.name)),
-                    DataCell(Text(product.quantity.toString())),
+                    DataCell(ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 120.w),
+                      child: Text(
+                        product.name,
+                        style: TextStyle(fontSize: 13.sp),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )),
+                    DataCell(Text(product.quantity.toString(),
+                        style: TextStyle(fontSize: 13.sp))),
                     DataCell(
-                      Text(displayPrice.toStringAsFixed(2)),
+                      Text(displayPrice.toStringAsFixed(2),
+                          style: TextStyle(fontSize: 13.sp)),
                     ),
                     DataCell(_buildActionButtons(product)),
                   ],
                 );
               }).toList(),
               if (state.status == InventoryStatus.loadingMore)
-                const DataRow(
+                DataRow(
                   cells: [
-                    DataCell(Center(child: CircularProgressIndicator())),
-                    DataCell(Text('')),
-                    DataCell(Text('')),
-                    DataCell(Text('')),
+                    const DataCell(Center(child: CircularProgressIndicator())),
+                    const DataCell(Text('')),
+                    const DataCell(Text('')),
+                    const DataCell(Text('')),
                   ],
                 ),
             ],
@@ -249,20 +293,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(product.name),
+        title: Text(product.name, style: TextStyle(fontSize: 18.sp)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('الباركود: ${product.barcode ?? 'لا يوجد'}'),
-            const Divider(),
-            Text('الكمية المتاحة: ${product.quantity}'),
-            const Divider(),
-            Text('سعر التكلفة: \$${product.costPrice.toStringAsFixed(2)}'),
-            Text('سعر البيع: \$${product.sellingPrice.toStringAsFixed(2)}'),
-            const Divider(),
+            Text('الباركود: ${product.barcode ?? 'لا يوجد'}',
+                style: TextStyle(fontSize: 14.sp)),
+            Divider(height: 16.h),
+            Text('الكمية المتاحة: ${product.quantity}',
+                style: TextStyle(fontSize: 14.sp)),
+            Divider(height: 16.h),
+            Text('سعر التكلفة: \$${product.costPrice.toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 14.sp)),
+            Text('سعر البيع: \$${product.sellingPrice.toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 14.sp)),
+            Divider(height: 16.h),
             Text(
               'تاريخ الإضافة: ${DateFormat('yyyy-MM-dd', 'ar').format(product.createdAt)}',
+              style: TextStyle(fontSize: 13.sp, color: Colors.grey),
             ),
           ],
         ),
@@ -270,7 +319,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           _buildActionButtons(product, fromDialog: true),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('إغلاق'),
+            child: Text('إغلاق', style: TextStyle(fontSize: 14.sp)),
           ),
         ],
       ),
@@ -285,6 +334,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         IconButton(
           icon: Icon(
             Icons.edit,
+            size: 20.r,
             color: fromDialog
                 ? Theme.of(context).colorScheme.secondary
                 : Colors.blueAccent,
@@ -298,6 +348,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         IconButton(
           icon: Icon(
             Icons.delete,
+            size: 20.r,
             color: fromDialog
                 ? Theme.of(context).colorScheme.error
                 : Colors.redAccent,
@@ -315,9 +366,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Widget _buildSortOptions(BuildContext context, InventoryState state) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Wrap(
-        spacing: 8.0,
+        spacing: 8.0.w,
         children: [
           _buildSortChip(context, state, SortBy.name, 'الاسم'),
           _buildSortChip(context, state, SortBy.quantity, 'الكمية'),
@@ -339,13 +390,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
       avatar: isSelected
           ? Icon(
               state.ascending ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 16,
+              size: 16.r,
             )
           : null,
-      label: Text(label),
-      onPressed: () => context.read<InventoryCubit>().changeSort(sortBy: sortBy),
+      label: Text(label, style: TextStyle(fontSize: 12.sp)),
+      onPressed: () =>
+          context.read<InventoryCubit>().changeSort(sortBy: sortBy),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(16.0.r),
         side: BorderSide(
           color:
               isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
@@ -354,6 +406,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       backgroundColor: isSelected
           ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
           : Colors.transparent,
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0),
     );
   }
 }

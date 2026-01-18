@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hasbni/core/services/api_services.dart';
+import 'package:hasbni/core/services/database_service.dart';
 import 'package:hasbni/core/services/sync_service.dart';
 import 'package:hasbni/data/repositories/auth_repository.dart';
 import 'package:hasbni/data/models/user_model.dart';
@@ -79,8 +80,15 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _authRepository.signOut();
+  try {
+    // 1. Clear API Token
+    await _authRepository.signOut(); 
+    // 2. Wipe Local Data
+    await DatabaseService().wipeDatabase(); 
+  } catch (e) {
+    print("Error during sign out cleanup: $e");
   }
+}
 
   @override
   Future<void> close() {
